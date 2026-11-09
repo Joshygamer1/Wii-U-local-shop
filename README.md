@@ -19,3 +19,6 @@ and in cmd type node start.js
 and There its done
 
 To learn how to add games that in the games/Demo game 
+
+
+Also this project uses Ai for code chat gpt
