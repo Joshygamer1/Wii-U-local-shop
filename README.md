@@ -4,6 +4,12 @@ How to set up
 
 First Download the files For Wii u Local shop
 
+Links 
+
+ftpiiu https://github.com/wiiu-env/ftpiiu_plugin/
+
+Node.js https://nodejs.org/en
+
 and also get node.js make sure to get legacy tools when Installig from the node.js installer
 
 Then open cmd and type. cd /d [Your Path here]
