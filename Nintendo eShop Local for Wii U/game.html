@@ -1,0 +1,1263 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nintendo eShop - Software Details</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        .detail-content { padding: 25px; }
+
+        .detail-heading {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .detail-heading h1 { margin: 0; color: #333; }
+
+        .detail-heading-line {
+            height: 2px;
+            background: #ddd;
+            flex: 1;
+        }
+
+        .software-panel {
+            display: flex;
+            gap: 30px;
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .software-art { width: 42%; min-width: 250px; }
+
+        .software-art img {
+            width: 100%;
+            display: block;
+            object-fit: contain;
+            border-radius: 5px;
+        }
+
+        .software-info { flex: 1; min-width: 0; }
+
+        .software-label {
+            color: #00a5cf;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .software-info h1 {
+            font-size: 30px;
+            margin: 10px 0;
+            color: #333;
+        }
+
+        .software-description {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .software-meta {
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+            padding: 12px 0;
+            margin: 20px 0;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .software-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .software-price {
+            font-size: 25px;
+            font-weight: bold;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .detail-download {
+            background: #00a5cf;
+            color: white;
+            border: none;
+            padding: 13px 28px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .detail-download:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .detail-favourite {
+            background: #eee;
+            color: #555;
+            border: none;
+            padding: 13px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .detail-section {
+            margin-top: 30px;
+            background: white;
+            padding: 22px;
+            border-radius: 8px;
+        }
+
+        .detail-section h2 {
+            color: #444;
+            font-size: 21px;
+            margin-top: 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 12px;
+        }
+
+        #fullDescription {
+            color: #666;
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        .screenshots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .screenshots-grid img {
+            display: block;
+            width: 100%;
+            height: 150px;
+            border-radius: 5px;
+            object-fit: contain;
+            background: #f4f4f4;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .screenshots-grid img:hover {
+            transform: scale(1.03);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+        }
+
+        .detail-status {
+            color: #666;
+            margin-top: 12px;
+        }
+
+        /* SCREENSHOT VIEWER */
+
+        .screenshot-viewer {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.94);
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 55px 75px;
+        }
+
+        .screenshot-viewer.active {
+            display: flex;
+        }
+
+        .screenshot-viewer img {
+            width: 95vw;
+            height: 88vh;
+            max-width: 1800px;
+            object-fit: contain;
+            border-radius: 4px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.5);
+        }
+
+        .screenshot-close {
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            color: white;
+            background: transparent;
+            border: none;
+            font-size: 42px;
+            cursor: pointer;
+        }
+
+        .screenshot-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            font-size: 30px;
+            cursor: pointer;
+        }
+
+        .screenshot-nav:hover,
+        .screenshot-close:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .screenshot-prev { left: 15px; }
+        .screenshot-next { right: 15px; }
+
+        .screenshot-counter {
+            color: white;
+            margin-top: 15px;
+            font-size: 15px;
+        }
+
+        /* DOWNLOADS PANEL */
+
+        .downloads-panel {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 99998;
+            background: rgba(0,0,0,0.65);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .downloads-box {
+            background: white;
+            width: 100%;
+            max-width: 650px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 25px;
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+        }
+
+        .downloads-box h2 {
+            margin: 0 0 20px;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .close-downloads {
+            position: absolute;
+            top: 12px;
+            right: 18px;
+            background: none;
+            border: none;
+            font-size: 30px;
+            color: #777;
+            cursor: pointer;
+        }
+
+        .refresh-downloads {
+            background: #00a5cf;
+            color: white;
+            border: none;
+            padding: 9px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 18px;
+        }
+
+        .download-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .download-item img {
+            width: 85px;
+            height: 85px;
+            object-fit: contain;
+            background: #f4f4f4;
+            border-radius: 5px;
+        }
+
+        .download-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .download-item-info h3 {
+            color: #333;
+            font-size: 16px;
+            margin: 0 0 7px;
+        }
+
+        .download-item-info p {
+            color: #777;
+            font-size: 13px;
+            margin: 4px 0;
+        }
+
+        .download-status {
+            color: #00a5cf !important;
+            font-weight: bold;
+        }
+
+        /* REMOVE BUTTON */
+
+        .remove-download {
+            background: #eee;
+            color: #555;
+            border: 1px solid #ddd;
+            padding: 9px 13px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .remove-download:hover {
+            background: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+        }
+
+        .remove-download:disabled {
+            opacity: 0.5;
+            cursor: wait;
+        }
+
+        .download-empty {
+            color: #777;
+            text-align: center;
+            padding: 30px 10px;
+        }
+
+        .download-total {
+            color: #777;
+            font-size: 13px;
+            margin-top: 18px;
+        }
+
+        @media (max-width: 700px) {
+            .software-panel { flex-direction: column; }
+            .software-art { width: 100%; min-width: 0; }
+            .screenshot-viewer { padding: 55px 45px; }
+        }
+
+        @media (max-width: 500px) {
+            .download-item img {
+                width: 65px;
+                height: 65px;
+            }
+
+            .download-item {
+                gap: 9px;
+                flex-wrap: wrap;
+            }
+
+            .remove-download {
+                margin-left: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="eshop">
+
+    <aside class="sidebar">
+        <div class="side-logo">
+            <img src="assets/eshop/logo.png" alt="Nintendo eShop">
+        </div>
+
+        <a class="side-button" href="index.html">⌂ Home</a>
+        <a class="side-button" href="all%20games.html">▦ Games</a>
+
+        <div class="sidebar-bottom">
+            <div class="account-icon">👤</div>
+            <div class="account-name">Guest</div>
+            <div class="account-balance">Balance: £0.00</div>
+        </div>
+    </aside>
+
+    <main class="main">
+
+        <header class="topbar">
+            <div class="top-title">
+                Nintendo <strong>eShop</strong>
+            </div>
+
+            <button onclick="history.back()">← Back</button>
+            <a class="top-icon" href="downloads.html">↓</a>
+            <button class="top-icon" onclick="showHelp()">?</button>
+        </header>
+
+        <div class="content detail-content">
+
+            <div class="detail-heading">
+                <span>Software Details</span>
+                <div class="detail-heading-line"></div>
+            </div>
+
+            <section class="software-panel">
+
+                <div class="software-art">
+                    <img id="gameArtwork"
+                         src="assets/eshop/featured1.png"
+                         alt="Game artwork">
+                </div>
+
+                <div class="software-info">
+
+                    <span class="software-label">WII U SOFTWARE</span>
+
+                    <h1 id="gameTitle">Loading game...</h1>
+
+                    <p class="software-description" id="gameDescription">
+                        Loading game information...
+                    </p>
+
+                    <div class="software-meta">
+                        <div id="gamePublisher"></div>
+                        <div id="gameGenre"></div>
+                        <div id="gameName"></div>
+                    </div>
+
+                    <div class="software-actions">
+
+                        <span class="software-price" id="gamePrice">FREE</span>
+
+                        <button class="detail-download" onclick="startDownload()">
+                            ↓ Download
+                        </button>
+
+                        <button class="detail-favourite"
+                                id="favouriteButton"
+                                onclick="toggleFavourite()">
+                            ♡ Add to Favourites
+                        </button>
+
+                    </div>
+
+                    <p class="detail-status" id="downloadStatus"></p>
+
+                </div>
+            </section>
+
+            <section class="detail-section">
+                <h2>About this software</h2>
+                <p id="fullDescription">Loading software description...</p>
+            </section>
+
+            <section class="detail-section">
+                <h2>Screenshots</h2>
+
+                <div class="screenshots-grid" id="screenshots">
+                    <p>Loading screenshots...</p>
+                </div>
+            </section>
+
+            <footer>
+                Nintendo eShop recreation · Local website
+            </footer>
+
+        </div>
+    </main>
+</div>
+
+<!-- SCREENSHOT VIEWER -->
+
+<div class="screenshot-viewer" id="screenshotViewer"
+     onclick="closeScreenshotBackground(event)">
+
+    <button class="screenshot-close"
+            onclick="closeScreenshotViewer()">×</button>
+
+    <button class="screenshot-nav screenshot-prev"
+            onclick="changeScreenshot(-1, event)">‹</button>
+
+    <img id="largeScreenshot" src="" alt="Enlarged game screenshot">
+
+    <button class="screenshot-nav screenshot-next"
+            onclick="changeScreenshot(1, event)">›</button>
+
+    <div class="screenshot-counter" id="screenshotCounter"></div>
+
+</div>
+
+<!-- DOWNLOADS PANEL -->
+
+<div id="downloadsPanel" class="downloads-panel">
+    <div class="downloads-box">
+
+        <button class="close-downloads"
+                onclick="closeDownloads()">×</button>
+
+        <h2>Downloads</h2>
+
+        <button class="refresh-downloads"
+                onclick="loadDownloads()">↻ Refresh</button>
+
+        <div id="downloadsList">
+            <p class="download-empty">Loading downloads...</p>
+        </div>
+
+        <p class="download-total" id="downloadTotal"></p>
+
+    </div>
+</div>
+
+<script>
+
+/* CURRENT GAME */
+
+var currentGame = null;
+var gameName = getQueryParameter("name");
+
+/* SCREENSHOT VIEWER DATA */
+
+var availableScreenshots = [];
+var currentScreenshotIndex = 0;
+
+
+/* READ URL PARAMETER */
+
+function getQueryParameter(name) {
+
+    var query = window.location.search.substring(1);
+    var parts = query.split("&");
+
+    for (var i = 0; i < parts.length; i++) {
+
+        var pair = parts[i].split("=");
+
+        if (decodeURIComponent(pair[0].replace(/\+/g, " ")) === name) {
+
+            try {
+                return decodeURIComponent(
+                    (pair[1] || "").replace(/\+/g, " ")
+                );
+            } catch (error) {
+                return "";
+            }
+        }
+    }
+
+    return null;
+}
+
+
+/* LOAD GAME FROM SERVER */
+
+function loadGame() {
+
+    if (!gameName) {
+        document.getElementById("gameTitle").textContent = "No game selected";
+        return;
+    }
+
+    var request = new XMLHttpRequest();
+    request.open("GET", "/api/games", true);
+
+    request.onload = function() {
+
+        if (request.status < 200 || request.status >= 300) {
+            document.getElementById("gameTitle").textContent =
+                "Could not load game";
+            return;
+        }
+
+        try {
+
+            var games = JSON.parse(request.responseText);
+
+            for (var i = 0; i < games.length; i++) {
+                if (games[i].name === gameName) {
+                    currentGame = games[i];
+                    break;
+                }
+            }
+
+            if (!currentGame) {
+                document.getElementById("gameTitle").textContent =
+                    "Game not found";
+                return;
+            }
+
+            displayGame();
+
+        } catch (error) {
+
+            console.log("Game loading error:", error);
+            document.getElementById("gameTitle").textContent =
+                "Game loading error";
+        }
+    };
+
+    request.onerror = function() {
+        document.getElementById("gameTitle").textContent =
+            "Could not connect to the server";
+    };
+
+    request.send();
+}
+
+
+/* DISPLAY GAME INFORMATION */
+
+function displayGame() {
+
+    document.title = currentGame.name + " - Nintendo eShop";
+
+    document.getElementById("gameTitle").textContent = currentGame.name;
+    document.getElementById("gameName").textContent =
+        "Title: " + currentGame.name;
+
+    document.getElementById("gameDescription").textContent =
+        currentGame.description ||
+        "Discover this game on the Nintendo eShop.";
+
+    document.getElementById("fullDescription").textContent =
+        "Loading software description...";
+
+    document.getElementById("gamePublisher").textContent =
+        currentGame.publisher ?
+        "Publisher: " + currentGame.publisher : "";
+
+    document.getElementById("gameGenre").textContent =
+        currentGame.genre ?
+        "Genre: " + currentGame.genre : "";
+
+    document.getElementById("gamePrice").textContent =
+        currentGame.price || "FREE";
+
+    var artwork = document.getElementById("gameArtwork");
+
+    artwork.src = currentGame.artwork ||
+        "assets/eshop/featured1.png";
+
+    artwork.alt = currentGame.name;
+
+    artwork.onerror = function() {
+        this.onerror = null;
+        this.src = "assets/eshop/featured1.png";
+    };
+
+    loadGameDetails();
+    updateFavouriteButton();
+}
+
+
+/* LOAD DESCRIPTION AND SCREENSHOTS */
+
+function loadGameDetails() {
+
+    var request = new XMLHttpRequest();
+
+    request.open(
+        "GET",
+        "/api/game-details?name=" + encodeURIComponent(currentGame.name),
+        true
+    );
+
+    request.onload = function() {
+
+        if (request.status >= 200 && request.status < 300) {
+
+            try {
+
+                var details = JSON.parse(request.responseText);
+
+                if (details.description && details.description.length > 0) {
+                    document.getElementById("fullDescription").textContent =
+                        details.description;
+                } else {
+                    document.getElementById("fullDescription").textContent =
+                        currentGame.description ||
+                        "No description has been added yet.";
+                }
+
+                loadScreenshots(details.screenshots || []);
+
+            } catch (error) {
+
+                console.log("Could not read game details:", error);
+                useFallbackDetails();
+            }
+
+        } else {
+            useFallbackDetails();
+        }
+    };
+
+    request.onerror = function() {
+        useFallbackDetails();
+    };
+
+    request.send();
+}
+
+
+/* FALLBACK */
+
+function useFallbackDetails() {
+
+    document.getElementById("fullDescription").textContent =
+        currentGame.description ||
+        "No description has been added yet.";
+
+    loadScreenshots(currentGame.screenshots || []);
+}
+
+
+/* LOAD SCREENSHOTS */
+
+function loadScreenshots(screenshotList) {
+
+    var container = document.getElementById("screenshots");
+
+    container.innerHTML = "";
+    availableScreenshots = [];
+
+    if (!screenshotList || screenshotList.length === 0) {
+        container.textContent = "No screenshots available.";
+        return;
+    }
+
+    for (var i = 0; i < screenshotList.length && i < 5; i++) {
+
+        var image = document.createElement("img");
+
+        image.src = screenshotList[i];
+        image.alt = currentGame.name + " screenshot " + (i + 1);
+
+        image.setAttribute("data-screenshot-index", availableScreenshots.length);
+
+        image.onclick = function() {
+            openScreenshotViewer(
+                parseInt(this.getAttribute("data-screenshot-index"), 10)
+            );
+        };
+
+        image.onerror = function() {
+            var index = parseInt(
+                this.getAttribute("data-screenshot-index"), 10
+            );
+
+            if (availableScreenshots[index] === this.src) {
+                availableScreenshots[index] = null;
+            }
+
+            this.parentNode.removeChild(this);
+
+            if (container.getElementsByTagName("img").length === 0) {
+                container.textContent = "No screenshots available.";
+            }
+        };
+
+        availableScreenshots.push(image.src);
+        container.appendChild(image);
+    }
+}
+
+
+/* OPEN SCREENSHOT VIEWER */
+
+function openScreenshotViewer(index) {
+
+    if (!availableScreenshots.length) return;
+
+    currentScreenshotIndex = index;
+    showCurrentScreenshot();
+
+    document.getElementById("screenshotViewer").className =
+        "screenshot-viewer active";
+}
+
+
+/* DISPLAY SELECTED SCREENSHOT */
+
+function showCurrentScreenshot() {
+
+    var image = document.getElementById("largeScreenshot");
+
+    image.src = availableScreenshots[currentScreenshotIndex];
+
+    document.getElementById("screenshotCounter").textContent =
+        (currentScreenshotIndex + 1) + " / " +
+        availableScreenshots.length;
+}
+
+
+/* NEXT AND PREVIOUS */
+
+function changeScreenshot(direction, event) {
+
+    if (event) event.stopPropagation();
+
+    if (!availableScreenshots.length) return;
+
+    currentScreenshotIndex += direction;
+
+    if (currentScreenshotIndex < 0) {
+        currentScreenshotIndex = availableScreenshots.length - 1;
+    }
+
+    if (currentScreenshotIndex >= availableScreenshots.length) {
+        currentScreenshotIndex = 0;
+    }
+
+    showCurrentScreenshot();
+}
+
+
+/* CLOSE VIEWER */
+
+function closeScreenshotViewer() {
+
+    document.getElementById("screenshotViewer").className =
+        "screenshot-viewer";
+
+    document.getElementById("largeScreenshot").src = "";
+}
+
+
+/* CLICK OUTSIDE TO CLOSE */
+
+function closeScreenshotBackground(event) {
+
+    if (event.target.id === "screenshotViewer") {
+        closeScreenshotViewer();
+    }
+}
+
+
+/* ESCAPE KEY */
+
+document.addEventListener("keydown", function(event) {
+
+    var viewer = document.getElementById("screenshotViewer");
+
+    if (!viewer.classList.contains("active")) return;
+
+    if (event.key === "Escape") {
+        closeScreenshotViewer();
+    }
+
+    if (event.key === "ArrowRight") {
+        changeScreenshot(1);
+    }
+
+    if (event.key === "ArrowLeft") {
+        changeScreenshot(-1);
+    }
+
+});
+
+
+/* FAVOURITES */
+
+function toggleFavourite() {
+
+    if (!currentGame) return;
+
+    var favourites = [];
+
+    try {
+        favourites = JSON.parse(
+            localStorage.getItem("eshopFavourites") || "[]"
+        );
+    } catch (error) {
+        favourites = [];
+    }
+
+    var index = favourites.indexOf(currentGame.name);
+
+    if (index === -1) {
+        favourites.push(currentGame.name);
+    } else {
+        favourites.splice(index, 1);
+    }
+
+    localStorage.setItem(
+        "eshopFavourites",
+        JSON.stringify(favourites)
+    );
+
+    updateFavouriteButton();
+}
+
+
+function updateFavouriteButton() {
+
+    if (!currentGame) return;
+
+    var favourites = [];
+
+    try {
+        favourites = JSON.parse(
+            localStorage.getItem("eshopFavourites") || "[]"
+        );
+    } catch (error) {
+        favourites = [];
+    }
+
+    var button = document.getElementById("favouriteButton");
+
+    if (favourites.indexOf(currentGame.name) !== -1) {
+        button.textContent = "♥ Remove from Favourites";
+    } else {
+        button.textContent = "♡ Add to Favourites";
+    }
+}
+
+
+/* DOWNLOAD BUTTON - ADD TO SERVER QUEUE */
+
+var downloadChecking = false;
+
+function startDownload() {
+
+    if (!currentGame || downloadChecking) return;
+
+    downloadChecking = true;
+
+    var status = document.getElementById("downloadStatus");
+    var button = document.querySelector(".detail-download");
+
+    status.textContent = "Adding to download queue...";
+    button.disabled = true;
+
+    var request = new XMLHttpRequest();
+
+    request.open("POST", "/api/downloads", true);
+    request.setRequestHeader("Content-Type", "application/json");
+
+    request.onload = function() {
+
+        downloadChecking = false;
+        button.disabled = false;
+
+        try {
+
+            var result = JSON.parse(request.responseText);
+
+            if (request.status >= 200 && request.status < 300) {
+
+                status.textContent =
+                    currentGame.name + " added to Downloads!";
+
+            } else {
+
+                status.textContent =
+                    result.error || "Could not add game to Downloads.";
+
+            }
+
+        } catch (error) {
+
+            status.textContent = "Could not read server response.";
+
+        }
+
+    };
+
+    request.onerror = function() {
+
+        downloadChecking = false;
+        button.disabled = false;
+
+        status.textContent = "Could not connect to download server.";
+
+    };
+
+    request.send(JSON.stringify({
+        name: currentGame.name
+    }));
+
+}
+
+
+/* DOWNLOADS PANEL */
+
+function openDownloads() {
+
+    document.getElementById("downloadsPanel").style.display = "flex";
+
+    loadDownloads();
+}
+
+
+function closeDownloads() {
+
+    document.getElementById("downloadsPanel").style.display = "none";
+
+}
+
+
+/* FORMAT FILE SIZE */
+
+function formatDownloadSize(bytes) {
+
+    if (bytes < 1024) {
+        return bytes + " B";
+    }
+
+    if (bytes < 1024 * 1024) {
+        return (bytes / 1024).toFixed(2) + " KB";
+    }
+
+    if (bytes < 1024 * 1024 * 1024) {
+        return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+    }
+
+    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+
+}
+
+
+/* REMOVE A DOWNLOAD */
+
+function removeDownload(id, button) {
+
+    if (!id || button.disabled) return;
+
+    button.disabled = true;
+    button.textContent = "Removing...";
+
+    var request = new XMLHttpRequest();
+
+    request.open(
+        "DELETE",
+        "/api/downloads/" + encodeURIComponent(id),
+        true
+    );
+
+    request.onload = function() {
+
+        if (request.status >= 200 && request.status < 300) {
+            loadDownloads();
+        } else {
+            button.disabled = false;
+            button.textContent = "Remove";
+
+            alert("Could not remove this download.");
+        }
+
+    };
+
+    request.onerror = function() {
+
+        button.disabled = false;
+        button.textContent = "Remove";
+
+        alert("Could not connect to the download server.");
+
+    };
+
+    request.send();
+
+}
+
+
+/* LOAD DOWNLOAD QUEUE */
+
+function loadDownloads() {
+
+    var container = document.getElementById("downloadsList");
+    var total = document.getElementById("downloadTotal");
+
+    container.innerHTML =
+        '<p class="download-empty">Loading downloads...</p>';
+
+    total.textContent = "";
+
+    var request = new XMLHttpRequest();
+
+    request.open("GET", "/api/downloads", true);
+
+    request.onload = function() {
+
+        if (request.status < 200 || request.status >= 300) {
+            container.textContent = "Could not load downloads.";
+            return;
+        }
+
+        try {
+
+            var result = JSON.parse(request.responseText);
+            var downloads = result.downloads || [];
+
+            container.innerHTML = "";
+
+            if (downloads.length === 0) {
+
+                container.innerHTML =
+                    '<p class="download-empty">You have no active downloads.</p>';
+
+                total.textContent = "0 downloads";
+                return;
+
+            }
+
+            /* LOAD GAME ARTWORK */
+
+            var gamesRequest = new XMLHttpRequest();
+
+            gamesRequest.open("GET", "/api/games", true);
+
+            gamesRequest.onload = function() {
+
+                var games = [];
+
+                if (gamesRequest.status >= 200 &&
+                    gamesRequest.status < 300) {
+
+                    try {
+                        games = JSON.parse(gamesRequest.responseText);
+                    } catch (error) {
+                        games = [];
+                    }
+
+                }
+
+                /* DISPLAY DOWNLOADS */
+
+                for (var i = 0; i < downloads.length; i++) {
+
+                    var download = downloads[i];
+
+                    var artwork = "assets/eshop/featured1.png";
+
+                    for (var j = 0; j < games.length; j++) {
+
+                        if (games[j].name === download.name) {
+                            artwork = games[j].artwork ||
+                                "assets/eshop/featured1.png";
+                            break;
+                        }
+
+                    }
+
+                    var item = document.createElement("div");
+                    item.className = "download-item";
+
+                    var image = document.createElement("img");
+                    image.src = artwork;
+                    image.alt = download.name;
+
+                    image.onerror = function() {
+                        this.onerror = null;
+                        this.src = "assets/eshop/featured1.png";
+                    };
+
+                    var info = document.createElement("div");
+                    info.className = "download-item-info";
+
+                    var title = document.createElement("h3");
+                    title.textContent = download.name;
+
+                    var files = document.createElement("p");
+                    files.textContent =
+                        (download.totalFiles || 0) + " files";
+
+                    var size = document.createElement("p");
+                    size.textContent =
+                        formatDownloadSize(download.totalSize || 0);
+
+                    var status = document.createElement("p");
+                    status.className = "download-status";
+
+                    status.textContent =
+                        download.status === "queued" ?
+                        "Waiting for Wii U connection" :
+                        (download.message || download.status);
+
+                    /* REMOVE BUTTON */
+
+                    var removeButton = document.createElement("button");
+                    removeButton.className = "remove-download";
+                    removeButton.textContent = "Remove";
+                    removeButton.type = "button";
+
+                    removeButton.onclick = function(id) {
+                        return function() {
+                            removeDownload(id, this);
+                        };
+                    }(download.id);
+
+                    info.appendChild(title);
+                    info.appendChild(files);
+                    info.appendChild(size);
+                    info.appendChild(status);
+
+                    item.appendChild(image);
+                    item.appendChild(info);
+                    item.appendChild(removeButton);
+
+                    container.appendChild(item);
+
+                }
+
+                total.textContent =
+                    downloads.length + " downloads in queue";
+
+            };
+
+            gamesRequest.onerror = function() {
+                container.textContent =
+                    "Could not load game artwork.";
+            };
+
+            gamesRequest.send();
+
+        } catch (error) {
+
+            container.textContent =
+                "Could not read download information.";
+
+        }
+
+    };
+
+    request.onerror = function() {
+        container.textContent =
+            "Could not connect to the download server.";
+    };
+
+    request.send();
+
+}
+
+
+/* HELP */
+
+function showHelp() {
+    alert("Welcome to the Nintendo eShop recreation!");
+}
+
+
+/* START */
+
+loadGame();
+
+</script>
+
+<script src="music.js"></script>
+
+</body>
+</html>

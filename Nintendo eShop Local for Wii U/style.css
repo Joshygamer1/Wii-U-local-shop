@@ -1,0 +1,713 @@
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    background: #e9edf0;
+    color: #454b50;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+button {
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.eshop {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar {
+    width: 180px;
+    min-width: 180px;
+    background: #f7f8f9;
+    border-right: 1px solid #d4dadd;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.side-logo {
+    height: 105px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    border-bottom: 1px solid #e0e4e7;
+}
+
+.side-logo img {
+    max-width: 145px;
+    max-height: 55px;
+    object-fit: contain;
+}
+
+.side-button {
+    height: 58px;
+    display: flex;
+    align-items: center;
+    padding: 0 17px;
+    gap: 13px;
+    border-bottom: 1px solid #e6e9eb;
+    color: #59636b;
+    font-size: 14px;
+}
+
+.side-button:hover {
+    background: #e9f5fa;
+    color: #009bc9;
+}
+
+.side-button.selected {
+    background: #e1f3fa;
+    border-left: 5px solid #00a4d6;
+    padding-left: 12px;
+    color: #008bb8;
+    font-weight: bold;
+}
+
+.side-icon {
+    width: 23px;
+    font-size: 22px;
+    text-align: center;
+}
+
+.sidebar-bottom {
+    margin-top: auto;
+    padding: 18px 10px;
+    text-align: center;
+    border-top: 1px solid #dfe3e6;
+    background: #f0f2f4;
+}
+
+.account-icon {
+    font-size: 27px;
+}
+
+.account-name {
+    margin-top: 5px;
+    font-weight: bold;
+}
+
+.account-balance {
+    margin-top: 5px;
+    color: #858d93;
+    font-size: 12px;
+}
+
+/* MAIN AREA */
+
+.main {
+    flex: 1;
+    min-width: 0;
+}
+
+/* TOP BAR */
+
+.topbar {
+    height: 76px;
+    background: #00a5d5;
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    gap: 15px;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.top-title {
+    font-size: 25px;
+    font-weight: 300;
+    white-space: nowrap;
+    margin-right: auto;
+}
+
+.top-title strong {
+    font-weight: bold;
+}
+
+.search-area {
+    display: flex;
+    width: 280px;
+    height: 36px;
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.search-area input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    padding: 0 12px;
+    font-size: 14px;
+}
+
+.search-area button {
+    width: 42px;
+    border: 0;
+    background: #f0f2f3;
+    color: #68747a;
+    font-size: 25px;
+}
+
+.search-area button:hover {
+    background: #dceef4;
+}
+
+.top-icon {
+    height: 36px;
+    width: 36px;
+    border: 1px solid rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+    color: white;
+    font-size: 20px;
+}
+
+.top-icon:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+/* QUICK LINKS */
+
+.quick-links {
+    height: 70px;
+    background: #fff;
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid #d9dfe2;
+    padding: 0 25px;
+}
+
+.quick-links a {
+    min-width: 135px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    color: #59646b;
+    border-right: 1px solid #edf0f2;
+}
+
+.quick-links a:first-child {
+    border-left: 1px solid #edf0f2;
+}
+
+.quick-links a:hover {
+    background: #f0faff;
+    color: #009ac7;
+}
+
+.quick-icon {
+    font-size: 22px;
+    color: #00a1d0;
+}
+
+/* PAGE CONTENT */
+
+.content {
+    max-width: 1150px;
+    margin: 0 auto;
+    padding: 25px 30px 50px;
+}
+
+.section-heading {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin: 8px 0 18px;
+    color: #e97824;
+    font-size: 21px;
+    font-weight: bold;
+}
+
+.heading-line {
+    height: 2px;
+    background: #e3e6e8;
+    flex: 1;
+}
+
+/* GAME PANELS */
+
+.game-card {
+    background: white;
+    border: 1px solid #d8dee2;
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.07);
+}
+
+.game-card:hover {
+    border-color: #a8cbd9;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+
+.featured-large {
+    margin-bottom: 18px;
+}
+
+.featured-image {
+    width: 100%;
+    height: 250px;
+    background: #dce5e9;
+    overflow: hidden;
+}
+
+.featured-image img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.game-info {
+    min-height: 83px;
+    padding: 12px 17px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.game-label {
+    color: #e97824;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.game-info h2 {
+    font-size: 19px;
+    margin: 4px 0;
+    color: #414b51;
+}
+
+.game-info p {
+    color: #899198;
+    margin: 0;
+    font-size: 12px;
+}
+
+/* TWO SMALLER PANELS */
+
+.featured-pair {
+    display: flex;
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+.small-card {
+    flex: 1;
+    min-width: 0;
+}
+
+.small-card > img {
+    width: 100%;
+    height: 155px;
+    object-fit: cover;
+    display: block;
+    background: #dce5e9;
+}
+
+.small-info {
+    min-height: 65px;
+    padding: 10px 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.small-info h3,
+.grid-info h3 {
+    font-size: 14px;
+    margin: 0 0 5px;
+    color: #48535a;
+}
+
+.small-info p {
+    font-size: 11px;
+    color: #929ba0;
+    margin: 0;
+}
+
+/* SECOND FEATURE */
+
+.second-feature {
+    margin-bottom: 30px;
+}
+
+.second-feature .featured-image {
+    height: 210px;
+}
+
+/* FAVOURITE BUTTON */
+
+.favourite-button {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #d9dfe2;
+    border-radius: 50%;
+    background: #fff;
+    color: #89949a;
+    font-size: 21px;
+    flex-shrink: 0;
+}
+
+.favourite-button:hover {
+    color: #e97824;
+    border-color: #e97824;
+}
+
+.favourite-button.favourited {
+    color: #e97824;
+    border-color: #e97824;
+}
+
+/* GAME GRID */
+
+.game-grid {
+    display: flex;
+    gap: 17px;
+    margin-bottom: 30px;
+}
+
+.grid-card {
+    flex: 1;
+    min-width: 0;
+}
+
+.grid-card > img {
+    width: 100%;
+    height: 145px;
+    display: block;
+    object-fit: cover;
+    background: #dce5e9;
+}
+
+.grid-info {
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.grid-info h3 {
+    overflow-wrap: anywhere;
+}
+
+/* SHOW ALL GAMES BUTTON */
+
+.show-all-container {
+    display: flex;
+    justify-content: center;
+    margin: 25px 0 35px;
+}
+
+.show-all-button {
+    background: #00a9e8;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 13px 35px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.show-all-button:hover {
+    background: #008bc5;
+}
+
+/* SEARCH */
+
+.no-results {
+    display: none;
+    padding: 30px;
+    text-align: center;
+    background: white;
+    color: #818b91;
+    border: 1px solid #d8dee2;
+    border-radius: 5px;
+}
+
+/* FOOTER */
+
+footer {
+    padding: 20px 0;
+    border-top: 1px solid #d9dfe2;
+    color: #9ba3a8;
+    font-size: 11px;
+    text-align: center;
+}
+
+/* DOWNLOADS WINDOW */
+
+.downloads-panel {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.45);
+    align-items: center;
+    justify-content: center;
+}
+
+.downloads-box {
+    position: relative;
+    background: white;
+    width: 380px;
+    max-width: 90%;
+    padding: 30px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.downloads-box h2 {
+    color: #00a5d5;
+}
+
+.close-downloads {
+    position: absolute;
+    right: 12px;
+    top: 10px;
+    border: 0;
+    background: none;
+    font-size: 25px;
+    color: #777;
+}
+
+/* MOBILE LAYOUT */
+
+@media (max-width: 750px) {
+    .sidebar {
+        width: 65px;
+        min-width: 65px;
+    }
+
+    .side-logo {
+        padding: 5px;
+    }
+
+    .side-logo img {
+        max-width: 48px;
+    }
+
+    .side-button {
+        justify-content: center;
+        padding: 0;
+        font-size: 0;
+    }
+
+    .side-button.selected {
+        padding: 0;
+        border-left-width: 4px;
+    }
+
+    .side-icon {
+        font-size: 22px;
+    }
+
+    .account-name,
+    .account-balance {
+        display: none;
+    }
+
+    .topbar {
+        padding: 0 12px;
+        gap: 7px;
+    }
+
+    .top-title {
+        font-size: 18px;
+    }
+
+    .search-area {
+        width: 160px;
+    }
+
+    .quick-links {
+        padding: 0;
+        overflow-x: auto;
+    }
+
+    .quick-links a {
+        min-width: 110px;
+        font-size: 12px;
+    }
+
+    .content {
+        padding: 18px 12px;
+    }
+
+    .featured-image {
+        height: 180px;
+    }
+
+    .small-card > img {
+        height: 110px;
+    }
+
+    .game-grid {
+        flex-wrap: wrap;
+    }
+
+    .grid-card {
+        flex-basis: 45%;
+    }
+}
+
+/* ESHOP CATEGORY SECTION */
+
+.category-grid {
+    display: block;
+    width: 100%;
+    margin: 20px 0 35px;
+    overflow: hidden;
+}
+
+.category-card {
+    display: inline-block;
+    vertical-align: top;
+    width: 30%;
+    margin: 1%;
+    background: #ffffff;
+    border: 1px solid #d8dee2;
+    border-radius: 5px;
+    overflow: hidden;
+    text-align: center;
+    color: #48535a;
+    cursor: pointer;
+}
+
+.category-card img {
+    display: block;
+    width: 100%;
+    height: 135px;
+}
+
+.category-card h3 {
+    margin: 12px;
+    font-size: 14px;
+}
+
+.category-card:hover {
+    border-color: #a8cbd9;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+
+@media (max-width: 750px) {
+    .category-card {
+        width: 46%;
+    }
+}
+
+/* WII U ESHOP MUSIC PLAYER */
+
+.music-player {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1001;
+}
+
+#musicButton {
+    padding: 12px 18px;
+    background: #00a5d5;
+    color: white;
+    border: 1px solid #008bb8;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+#musicButton:hover {
+    background: #008bb8;
+}
+
+
+/* WII U BROWSER IMAGE COMPATIBILITY FIX */
+
+/* Older browsers: preserve the original image proportions */
+
+.featured-image {
+    height: auto;
+}
+
+.featured-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.small-card > img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.grid-card > img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.category-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Modern browsers keep the original eShop image layout */
+
+@supports (object-fit: cover) {
+
+    .featured-image {
+        height: 250px;
+    }
+
+    .featured-image img {
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .small-card > img {
+        height: 155px;
+        object-fit: cover;
+    }
+
+    .grid-card > img {
+        height: 145px;
+        object-fit: cover;
+    }
+
+    .category-card img {
+        height: 135px;
+        object-fit: cover;
+    }
+
+    .second-feature .featured-image {
+        height: 210px;
+    }
+}
+

@@ -1,0 +1,239 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>All Games - Nintendo eShop</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        .main-content {
+            padding: 25px;
+        }
+
+        .all-games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 20px;
+        }
+
+        .all-game-card {
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .all-game-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: contain;
+        }
+
+        .all-game-info {
+            padding: 12px;
+        }
+
+        .all-game-info h3 {
+            margin: 0;
+        }
+
+        .page-heading {
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="eshop">
+
+    <aside class="sidebar">
+
+        <div class="side-logo">
+            <img src="assets/eshop/logo.png" alt="Nintendo eShop">
+        </div>
+
+        <a class="side-button" href="index.html">⌂ Home</a>
+        <a class="side-button selected" href="all%20games.html">▦ Games</a>
+
+        <div class="sidebar-bottom">
+            <div class="account-icon">👤</div>
+            <div class="account-name">Guest</div>
+            <div class="account-balance">Balance: £0.00</div>
+        </div>
+
+    </aside>
+
+    <main class="main">
+
+        <header class="topbar">
+
+            <div class="top-title">
+                Nintendo <strong>eShop</strong>
+            </div>
+
+            <div class="search-area">
+                <input id="searchInput" type="text" placeholder="Search games...">
+                <button onclick="searchGames()">⌕</button>
+            </div>
+
+            <a class="top-icon" href="index.html">⌂</a>
+
+        </header>
+
+        <div class="content main-content">
+
+            <div class="page-heading">
+                <div class="section-heading">
+                    <span>All Games</span>
+                    <div class="heading-line"></div>
+                </div>
+
+                <p>Browse all available games in the Nintendo eShop.</p>
+            </div>
+
+            <section class="all-games-grid" id="allGames">
+
+                <p>Loading games...</p>
+
+            </section>
+
+            <div class="no-results" id="noResults">
+                No games found.
+            </div>
+
+            <footer>Nintendo eShop recreation · Local website</footer>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script>
+
+var allGames = [];
+
+/* LOAD ALL GAMES */
+
+function loadGames() {
+
+    var container = document.getElementById("allGames");
+    var request = new XMLHttpRequest();
+
+    request.open("GET", "/api/games", true);
+
+    request.onload = function() {
+
+        if (request.status >= 200 && request.status < 300) {
+
+            try {
+
+                allGames = JSON.parse(request.responseText);
+                container.innerHTML = "";
+
+                if (allGames.length === 0) {
+                    container.innerHTML = "<p>No games available.</p>";
+                    return;
+                }
+
+                allGames.forEach(function(game) {
+
+                    var card = document.createElement("article");
+                    card.className = "game-card all-game-card";
+                    card.setAttribute("data-name", game.name);
+
+                    var img = document.createElement("img");
+
+                    img.src = game.artwork
+                        ? game.artwork
+                        : "assets/eshop/featured1.png";
+
+                    img.alt = game.name;
+
+                    img.onerror = function() {
+                        this.onerror = null;
+                        this.src = "assets/eshop/featured1.png";
+                    };
+
+                    var info = document.createElement("div");
+                    info.className = "all-game-info";
+
+                    var title = document.createElement("h3");
+                    title.textContent = game.name;
+
+                    info.appendChild(title);
+                    card.appendChild(img);
+                    card.appendChild(info);
+
+                    card.onclick = function() {
+                        window.location.href =
+                            "game.html?name=" + encodeURIComponent(game.name);
+                    };
+
+                    container.appendChild(card);
+
+                });
+
+            } catch (error) {
+
+                console.log("Could not load games:", error);
+                container.innerHTML = "<p>Could not load games.</p>";
+
+            }
+
+        } else {
+
+            container.innerHTML = "<p>Could not connect to the game library.</p>";
+
+        }
+
+    };
+
+    request.onerror = function() {
+        container.innerHTML = "<p>Could not connect to the server.</p>";
+    };
+
+    request.send();
+
+}
+
+/* SEARCH GAMES */
+
+function searchGames() {
+
+    var query = document.getElementById("searchInput").value.toLowerCase();
+    var cards = document.getElementsByClassName("all-game-card");
+    var found = 0;
+
+    for (var i = 0; i < cards.length; i++) {
+
+        var name = cards[i].getAttribute("data-name").toLowerCase();
+
+        var visible = name.indexOf(query) !== -1;
+
+        cards[i].style.display = visible ? "" : "none";
+
+        if (visible) {
+            found++;
+        }
+
+    }
+
+    document.getElementById("noResults").style.display =
+        found === 0 ? "block" : "none";
+
+}
+
+document.getElementById("searchInput").onkeyup = searchGames;
+
+/* START */
+
+loadGames();
+
+</script>
+
+<script src="music.js"></script>
+
+</body>
+</html>
