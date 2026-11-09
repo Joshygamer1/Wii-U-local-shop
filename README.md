@@ -17,3 +17,5 @@ and edit const WIIU_IP = process.env.WIIU_IP || "YOURWIIUIPHERE"; const WIIU_FTP
 and in cmd type node start.js
 
 and There its done
+
+To learn how to add games that in the games/Demo game 
