@@ -1,0 +1,647 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Download Management</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #555;
+    background:
+        radial-gradient(ellipse at 20% 20%, #ffffff 0%, transparent 55%),
+        linear-gradient(135deg, #e5e5e5, #c9c9c9);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.header {
+    height: 90px;
+    background: linear-gradient(110deg, #00a9cb, #00c0dc);
+    border-radius: 0 0 28px 28px;
+    box-shadow: 0 4px 7px #777;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 0 35px;
+    position: relative;
+    z-index: 2;
+}
+
+.download-icon {
+    width: 43px;
+    height: 43px;
+    margin-right: 12px;
+}
+
+.header-title {
+    font-size: 34px;
+    font-weight: normal;
+}
+
+.internet-status {
+    margin-left: auto;
+    color: #a5f5ff;
+    font-size: 23px;
+}
+
+.intro {
+    max-width: 1000px;
+    margin: 22px auto 35px;
+    padding: 0 15px;
+    text-align: center;
+    font-size: 25px;
+    line-height: 1.3;
+    color: #555;
+}
+
+.download-area {
+    width: 88%;
+    max-width: 1100px;
+    margin: 0 auto 100px;
+}
+
+.download-item {
+    position: relative;
+    min-height: 122px;
+    margin-bottom: 18px;
+    padding: 13px 18px;
+    border-radius: 23px;
+    border: 3px solid #c5c5c5;
+    background: linear-gradient(#fff, #e8e8e8);
+    box-shadow:
+        0 3px 7px #999,
+        inset 0 2px 5px #fff;
+    display: flex;
+    align-items: center;
+}
+
+.download-item.selected {
+    border: 4px solid #28d4d8;
+    box-shadow:
+        0 0 9px #00cbd3,
+        inset 0 0 8px #8fffff;
+}
+
+.game-art {
+    width: 82px;
+    height: 82px;
+    object-fit: cover;
+    border-radius: 9px;
+    margin-right: 17px;
+    border: 1px solid #ccc;
+    flex-shrink: 0;
+    background: #ddd;
+}
+
+.game-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.game-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+.game-name {
+    font-size: 29px;
+    color: #444;
+    overflow-wrap: anywhere;
+}
+
+.game-status {
+    font-size: 19px;
+    white-space: nowrap;
+    color: #555;
+}
+
+.status-bar {
+    height: 42px;
+    width: 100%;
+    border-radius: 13px;
+    background: linear-gradient(#00d8df, #00bfc9);
+    box-shadow:
+        inset 0 2px 5px #00a4ac,
+        0 1px 3px #aaa;
+    display: flex;
+    align-items: center;
+    padding: 0 13px;
+    color: white;
+    font-size: 23px;
+    position: relative;
+    overflow: hidden;
+}
+
+.status-bar.failed {
+    background: linear-gradient(#e58a8a, #c95b5b);
+}
+
+.status-bar.queued {
+    background: linear-gradient(#aaa, #888);
+}
+
+.status-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: rgba(0, 230, 170, 0.38);
+    z-index: 0;
+}
+
+.status-text {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.check {
+    font-size: 32px;
+    color: #fff;
+    text-shadow: 0 1px 3px #168c48;
+    margin-right: 9px;
+}
+
+.file-details {
+    font-size: 13px;
+    color: #777;
+    margin-top: 5px;
+}
+
+.remove-button {
+    margin-left: 12px;
+    border: 1px solid #aaa;
+    border-radius: 15px;
+    padding: 7px 12px;
+    color: #666;
+    background: linear-gradient(#fff, #ddd);
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.remove-button:disabled {
+    opacity: 0.4;
+}
+
+.empty {
+    background: #eee;
+    border: 3px solid #ccc;
+    border-radius: 22px;
+    padding: 45px 20px;
+    text-align: center;
+    font-size: 22px;
+    color: #888;
+}
+
+.bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 76px;
+    background: linear-gradient(#fff, #e5e5e5);
+    border-top: 5px solid #c8c8c8;
+    box-shadow: 0 -3px 8px #999;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+}
+
+.back-control {
+    background: #555;
+    color: white;
+    border-radius: 0 40px 0 0;
+    padding: 12px 30px 12px 12px;
+    font-size: 19px;
+    cursor: pointer;
+    border: none;
+}
+
+.back-control span {
+    background: white;
+    color: #333;
+    border-radius: 50%;
+    padding: 5px 10px;
+    margin-left: 8px;
+}
+
+.bottom-label {
+    background: white;
+    border-radius: 40px 0 0 0;
+    padding: 18px 35px;
+    font-size: 22px;
+    color: #333;
+}
+
+.connection {
+    text-align: center;
+    font-size: 13px;
+    color: #777;
+    margin: 15px;
+}
+
+@media screen and (max-width: 700px) {
+    .header {
+        height: 70px;
+        padding: 0 12px;
+    }
+
+    .header-title {
+        font-size: 21px;
+    }
+
+    .internet-status {
+        display: none;
+    }
+
+    .intro {
+        font-size: 18px;
+    }
+
+    .download-area {
+        width: 94%;
+    }
+
+    .download-item {
+        padding: 10px;
+    }
+
+    .game-art {
+        width: 60px;
+        height: 60px;
+        margin-right: 10px;
+    }
+
+    .game-name {
+        font-size: 19px;
+    }
+
+    .game-status {
+        font-size: 13px;
+    }
+
+    .status-bar {
+        height: 34px;
+        font-size: 16px;
+    }
+
+    .remove-button {
+        font-size: 11px;
+        padding: 5px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+
+    <svg class="download-icon" viewBox="0 0 50 50">
+        <path d="M25 3 L25 25 M16 17 L25 26 L34 17"
+              fill="none" stroke="white" stroke-width="5"
+              stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M10 25 Q10 21 15 21 H35 Q40 21 40 26 V43 Q40 47 35 47 H15 Q10 47 10 43 Z"
+              fill="white"/>
+        <path d="M18 30 L32 30 L32 42 L18 42 Z"
+              fill="#00a9cb"/>
+    </svg>
+
+    <div class="header-title">Download Management</div>
+
+    <div class="internet-status" id="internetStatus">
+        Connecting...
+    </div>
+
+</div>
+
+<div class="intro">
+    You can check the download status of software and content here.<br>
+    Please do not disconnect or power off the Wii U during a transfer.
+</div>
+
+<div class="download-area">
+
+    <div id="downloadList">
+        <div class="empty">Loading downloads...</div>
+    </div>
+
+    <div class="connection" id="connectionStatus">
+        Connecting to download manager...
+    </div>
+
+</div>
+
+<div class="bottom-bar">
+
+    <button class="back-control" onclick="goBack()">
+        ✕ <span>B</span>
+    </button>
+
+    <div class="bottom-label">
+        Download List
+    </div>
+
+</div>
+
+<script>
+
+var downloads = [];
+var games = [];
+var selectedIndex = 0;
+
+function request(url, method, callback) {
+
+    var xhr = new XMLHttpRequest();
+
+    xhr.open(method, url, true);
+
+    xhr.onreadystatechange = function () {
+
+        if (xhr.readyState !== 4) return;
+
+        if (xhr.status >= 200 && xhr.status < 300) {
+
+            try {
+                callback(null, JSON.parse(xhr.responseText));
+            } catch (error) {
+                callback("Invalid server response");
+            }
+
+        } else {
+            callback("Server error: " + xhr.status);
+        }
+    };
+
+    xhr.onerror = function () {
+        callback("Connection failed");
+    };
+
+    xhr.send();
+}
+
+function createElement(tag, className, text) {
+
+    var element = document.createElement(tag);
+
+    if (className) {
+        element.className = className;
+    }
+
+    if (text !== undefined) {
+        element.textContent = text;
+    }
+
+    return element;
+}
+
+function getArtwork(name) {
+
+    for (var i = 0; i < games.length; i++) {
+        if (games[i].name === name) {
+            return games[i].artwork;
+        }
+    }
+
+    return null;
+}
+
+function getStatus(item) {
+
+    if (item.status === "queued") return "Waiting in queue";
+    if (item.status === "connecting") return "Connecting to Wii U";
+    if (item.status === "uploading") return "Transferring";
+    if (item.status === "completed") return "Transfer completed";
+    if (item.status === "failed") return "Transfer failed";
+
+    return item.status || "Unknown";
+}
+
+function renderDownloads() {
+
+    var list = document.getElementById("downloadList");
+    list.innerHTML = "";
+
+    if (downloads.length === 0) {
+
+        list.appendChild(
+            createElement(
+                "div",
+                "empty",
+                "There are currently no downloads."
+            )
+        );
+
+        return;
+    }
+
+    for (var i = 0; i < downloads.length; i++) {
+
+        var item = downloads[i];
+
+        var row = createElement(
+            "div",
+            i === selectedIndex
+                ? "download-item selected"
+                : "download-item"
+        );
+
+        var artwork = createElement("img", "game-art");
+
+        var image = getArtwork(item.name);
+
+        if (image) {
+            artwork.src = image;
+        } else {
+            artwork.style.visibility = "hidden";
+        }
+
+        artwork.alt = "";
+
+        row.appendChild(artwork);
+
+        var content = createElement("div", "game-content");
+
+        var heading = createElement("div", "game-heading");
+
+        heading.appendChild(
+            createElement("div", "game-name", item.name)
+        );
+
+        heading.appendChild(
+            createElement("div", "game-status", getStatus(item))
+        );
+
+        content.appendChild(heading);
+
+        var bar = createElement(
+            "div",
+            item.status === "failed"
+                ? "status-bar failed"
+                : item.status === "queued"
+                    ? "status-bar queued"
+                    : "status-bar"
+        );
+
+        var fill = createElement("div", "status-fill");
+
+        var progress = Number(item.progress) || 0;
+
+        if (progress < 0) progress = 0;
+        if (progress > 100) progress = 100;
+
+        fill.style.width = progress + "%";
+
+        bar.appendChild(fill);
+
+        var statusText = createElement("div", "status-text");
+
+        if (item.status === "completed") {
+
+            statusText.appendChild(
+                createElement("span", "check", "✓")
+            );
+
+            statusText.appendChild(
+                document.createTextNode("Transfer completed successfully!")
+            );
+
+        } else {
+
+            statusText.textContent =
+                item.message || getStatus(item);
+        }
+
+        bar.appendChild(statusText);
+        content.appendChild(bar);
+
+        var details = (item.uploadedFiles || 0) +
+            " / " + (item.totalFiles || 0) +
+            " files transferred · " +
+            progress + "%";
+
+        content.appendChild(
+            createElement("div", "file-details", details)
+        );
+
+        row.appendChild(content);
+
+        var remove = createElement(
+            "button",
+            "remove-button",
+            "Remove"
+        );
+
+        if (
+            item.status === "uploading" ||
+            item.status === "connecting"
+        ) {
+            remove.disabled = true;
+        } else {
+            remove.onclick = (function (id) {
+                return function () {
+                    removeDownload(id);
+                };
+            })(item.id);
+        }
+
+        row.appendChild(remove);
+
+        list.appendChild(row);
+    }
+}
+
+function loadDownloads() {
+
+    request(
+        "/api/downloads?time=" + new Date().getTime(),
+        "GET",
+        function (error, result) {
+
+            if (error) {
+                document.getElementById("connectionStatus").textContent =
+                    "Could not connect: " + error;
+
+                document.getElementById("internetStatus").textContent =
+                    "Connection Error";
+
+                return;
+            }
+
+            downloads = result.downloads || [];
+
+            if (selectedIndex >= downloads.length) {
+                selectedIndex = Math.max(0, downloads.length - 1);
+            }
+
+            document.getElementById("connectionStatus").textContent =
+                "Connected to your Wii U download server";
+
+            document.getElementById("internetStatus").textContent =
+                "Download Manager";
+
+            renderDownloads();
+        }
+    );
+}
+
+function loadGames() {
+
+    request("/api/games", "GET", function (error, result) {
+
+        if (!error) {
+            games = result || [];
+        }
+
+        loadDownloads();
+    });
+}
+
+function removeDownload(id) {
+
+    request(
+        "/api/downloads/" + encodeURIComponent(id),
+        "DELETE",
+        function (error) {
+
+            if (error) {
+                alert("Could not remove this download.");
+                return;
+            }
+
+            loadDownloads();
+        }
+    );
+}
+
+function goBack() {
+    window.location.href = "index.html";
+}
+
+loadGames();
+
+window.setInterval(function () {
+    loadDownloads();
+}, 2000);
+
+</script>
+
+<script src="music.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,1063 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nintendo eShop</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* DOWNLOADS PANEL */
+
+        .downloads-panel {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 99998;
+            background: rgba(0,0,0,0.65);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .downloads-box {
+            background: white;
+            width: 100%;
+            max-width: 650px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 25px;
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+        }
+
+        .downloads-box h2 {
+            margin: 0 0 20px;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .close-downloads {
+            position: absolute;
+            top: 12px;
+            right: 18px;
+            background: none;
+            border: none;
+            font-size: 30px;
+            color: #777;
+            cursor: pointer;
+        }
+
+        .refresh-downloads {
+            background: #00a5cf;
+            color: white;
+            border: none;
+            padding: 9px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 18px;
+        }
+
+        .download-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .download-item img {
+            width: 85px;
+            height: 85px;
+            object-fit: contain;
+            background: #f4f4f4;
+            border-radius: 5px;
+        }
+
+        .download-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .download-item-info h3 {
+            color: #333;
+            font-size: 16px;
+            margin: 0 0 7px;
+        }
+
+        .download-item-info p {
+            color: #777;
+            font-size: 13px;
+            margin: 4px 0;
+        }
+
+        .download-status {
+            color: #00a5cf !important;
+            font-weight: bold;
+        }
+
+        .remove-download {
+            background: #eee;
+            color: #555;
+            border: 1px solid #ddd;
+            padding: 9px 13px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .remove-download:hover {
+            background: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+        }
+
+        .remove-download:disabled {
+            opacity: 0.5;
+            cursor: wait;
+        }
+
+        .download-empty {
+            color: #777;
+            text-align: center;
+            padding: 30px 10px;
+        }
+
+        .download-total {
+            color: #777;
+            font-size: 13px;
+            margin-top: 18px;
+        }
+
+        @media (max-width: 500px) {
+            .download-item img {
+                width: 65px;
+                height: 65px;
+            }
+
+            .download-item {
+                gap: 9px;
+                flex-wrap: wrap;
+            }
+
+            .remove-download {
+                margin-left: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="eshop">
+
+    <aside class="sidebar">
+        <div class="side-logo">
+            <img src="assets/eshop/logo.png" alt="Nintendo eShop">
+        </div>
+
+        <a class="side-button selected" href="#" onclick="showAllGames(); return false;">⌂ Home</a>
+        <a class="side-button" href="#games" onclick="showAllGames(); return false;">▦ Games</a>
+        <a class="side-button" href="#new" onclick="showNewGames(); return false;">★ New Releases</a>
+        <a class="side-button" href="#popular" onclick="showPopular(); return false;">♛ Popular</a>
+        <a class="side-button" href="#favourites" onclick="showFavourites(); return false;">♡ Favourites</a>
+
+        <div class="sidebar-bottom">
+            <div class="account-icon">👤</div>
+            <div class="account-name">Guest</div>
+            <div class="account-balance">Balance: £0.00</div>
+        </div>
+    </aside>
+
+    <main class="main">
+
+        <header class="topbar">
+            <div class="top-title">Nintendo <strong>eShop</strong></div>
+
+            <div class="search-area">
+                <input id="searchInput" type="text" placeholder="Search games...">
+                <button onclick="searchGames()">⌕</button>
+            </div>
+
+            <a class="top-icon" href="downloads.html">↓</a>
+            <button class="top-icon" onclick="showHelp()">?</button>
+        </header>
+
+        <div class="quick-links">
+            <a href="#new" onclick="showNewGames(); return false;">✦ What's New</a>
+            <a href="#popular" onclick="showPopular(); return false;">▤ Charts</a>
+            <a href="#favourites" onclick="showFavourites(); return false;">♡ Favourites</a>
+            <a href="#categories" onclick="showCategories(); return false;">▦ Categories</a>
+        </div>
+
+        <div class="content">
+
+            <!-- IN THE SPOTLIGHT -->
+
+            <div class="section-heading">
+                <span>In the Spotlight</span>
+                <div class="heading-line"></div>
+            </div>
+
+            <section class="featured-large game-card"
+                     data-name="Featured Adventure"
+                     data-new="true"
+                     data-popular="true">
+
+                <div class="featured-image">
+                    <img src="assets/eshop/featured1.png" alt="Featured Adventure">
+                </div>
+
+                <div class="game-info">
+                    <div>
+                        <span class="game-label">FEATURED</span>
+                        <h2>Featured Adventure</h2>
+                        <p>Discover amazing adventures waiting for you.</p>
+                    </div>
+                    <button class="favourite-button" onclick="toggleFavourite(this)">♡</button>
+                </div>
+            </section>
+
+            <section class="featured-pair">
+
+                <article class="game-card small-card" data-name="Super Mario" data-new="true">
+                    <img src="assets/eshop/game1.png" alt="Super Mario">
+                    <div class="small-info">
+                        <div>
+                            <h3>Super Mario</h3>
+                            <p>Featured game</p>
+                        </div>
+                        <button class="favourite-button" onclick="toggleFavourite(this)">♡</button>
+                    </div>
+                </article>
+
+                <article class="game-card small-card" data-name="Super Smash Bros For Wii U" data-popular="true">
+                    <img src="assets/eshop/game2.png" alt="Super Smash Bros For Wii U">
+                    <div class="small-info">
+                        <div>
+                            <h3>Super Smash Bros For Wii U</h3>
+                            <p>Featured game</p>
+                        </div>
+                        <button class="favourite-button" onclick="toggleFavourite(this)">♡</button>
+                    </div>
+                </article>
+
+            </section>
+
+            <section class="featured-large second-feature game-card"
+                     data-name="More Great Games" data-popular="true">
+
+                <div class="featured-image">
+                    <img src="assets/eshop/featured2.png" alt="More Great Games">
+                </div>
+
+                <div class="game-info">
+                    <div>
+                        <span class="game-label">RECOMMENDED</span>
+                        <h2>More Great Games</h2>
+                        <p>Take a look at more games available in the shop.</p>
+                    </div>
+                    <button class="favourite-button" onclick="toggleFavourite(this)">♡</button>
+                </div>
+            </section>
+
+            <!-- BROWSE CATEGORIES -->
+
+            <div class="section-heading" id="categories">
+                <span>Browse Categories</span>
+                <div class="heading-line"></div>
+            </div>
+
+            <section class="category-grid">
+
+                <article class="category-card" onclick="showCategory('Adventure')">
+                    <img src="assets/eshop/category-adventure.png" alt="Adventure">
+                    <h3>Adventure</h3>
+                </article>
+
+                <article class="category-card" onclick="showCategory('Action')">
+                    <img src="assets/eshop/category-action.png" alt="Action">
+                    <h3>Action</h3>
+                </article>
+
+                <article class="category-card" onclick="showCategory('Platformer')">
+                    <img src="assets/eshop/category-platformer.png" alt="Platformer">
+                    <h3>Platformer</h3>
+                </article>
+
+                <article class="category-card" onclick="showCategory('Puzzle')">
+                    <img src="assets/eshop/category-puzzle.png" alt="Puzzle">
+                    <h3>Puzzle</h3>
+                </article>
+
+                <article class="category-card" onclick="showCategory('Racing')">
+                    <img src="assets/eshop/category-racing.png" alt="Racing">
+                    <h3>Racing</h3>
+                </article>
+
+                <article class="category-card" onclick="showCategory('Sports')">
+                    <img src="assets/eshop/category-sports.png" alt="Sports">
+                    <h3>Sports</h3>
+                </article>
+
+                <article class="category-card" onclick="showCategory('Role Playing')">
+                    <img src="assets/eshop/category-role-playing.png" alt="Role Playing">
+                    <h3>Role Playing</h3>
+                </article>
+
+                <article class="category-card" onclick="showCategory('Indie')">
+                    <img src="assets/eshop/category-indie.png" alt="Indie">
+                    <h3>Indie</h3>
+                </article>
+
+                <article class="category-card" onclick="showCategory('Virtual Console')">
+                    <img src="assets/eshop/category-virtual-console.png" alt="Virtual Console">
+                    <h3>Virtual Console</h3>
+                </article>
+
+                <article class="category-card" onclick="showCategory('Applications')">
+                    <img src="assets/eshop/category-applications.png" alt="Applications">
+                    <h3>Applications</h3>
+                </article>
+
+            </section>
+
+            <!-- NEW RELEASES / CATEGORY RESULTS -->
+
+            <div class="section-heading" id="new">
+                <span id="gamesHeading">New Releases</span>
+                <div class="heading-line"></div>
+            </div>
+
+            <section class="game-grid" id="games">
+                <p>Loading new releases...</p>
+            </section>
+
+            <div class="show-all-container">
+                <button class="show-all-button"
+                        onclick="window.location.href='all%20games.html'">
+                    Show All Games
+                </button>
+            </div>
+
+            <!-- DOWNLOADED GAME LIBRARY -->
+
+            <div class="section-heading">
+                <span>Your Game Library</span>
+                <div class="heading-line"></div>
+            </div>
+
+            <section class="game-grid" id="automaticGames">
+                <p>Loading your game library...</p>
+            </section>
+
+            <div class="no-results" id="noResults">No games found.</div>
+
+            <footer>Nintendo eShop recreation · Local website</footer>
+
+        </div>
+    </main>
+</div>
+
+<!-- DOWNLOADS PANEL -->
+
+<div id="downloadsPanel" class="downloads-panel">
+    <div class="downloads-box">
+
+        <button class="close-downloads"
+                onclick="closeDownloads()">×</button>
+
+        <h2>Downloads</h2>
+
+        <button class="refresh-downloads"
+                onclick="loadDownloads()">↻ Refresh</button>
+
+        <div id="downloadsList">
+            <p class="download-empty">Loading downloads...</p>
+        </div>
+
+        <p class="download-total" id="downloadTotal"></p>
+
+    </div>
+</div>
+
+<script>
+
+var currentFilter = "all";
+var automaticGames = [];
+var selectedCategory = "";
+
+/* OPEN GAME PAGE */
+
+function openGame(name) {
+    location.href = "game.html?name=" + encodeURIComponent(name);
+}
+
+/* AUTOMATIC NEW RELEASES */
+
+function loadNewReleases() {
+
+    var container = document.getElementById("games");
+    var request = new XMLHttpRequest();
+
+    request.open("GET", "/api/games", true);
+
+    request.onload = function() {
+
+        if (request.status >= 200 && request.status < 300) {
+
+            try {
+
+                var games = JSON.parse(request.responseText);
+                container.innerHTML = "";
+
+                if (!games || games.length === 0) {
+                    container.innerHTML = "<p>No games available yet.</p>";
+                    return;
+                }
+
+                games.forEach(function(game) {
+
+                    var card = document.createElement("article");
+                    card.className = "game-card grid-card";
+                    card.setAttribute("data-name", game.name);
+                    card.setAttribute("data-new", "true");
+                    card.setAttribute("data-category", game.category || "Uncategorised");
+
+                    var img = document.createElement("img");
+
+                    img.src = game.artwork
+                        ? game.artwork
+                        : "assets/eshop/featured1.png";
+
+                    img.alt = game.name;
+
+                    img.onerror = function() {
+                        this.onerror = null;
+                        this.src = "assets/eshop/featured1.png";
+                    };
+
+                    var info = document.createElement("div");
+                    info.className = "grid-info";
+
+                    var title = document.createElement("h3");
+                    title.textContent = game.name;
+
+                    var favourite = document.createElement("button");
+                    favourite.className = "favourite-button";
+                    favourite.textContent = "♡";
+
+                    favourite.onclick = function(event) {
+                        event.stopPropagation();
+                        toggleFavourite(favourite);
+                    };
+
+                    info.appendChild(title);
+                    info.appendChild(favourite);
+
+                    card.appendChild(img);
+                    card.appendChild(info);
+
+                    card.onclick = function() {
+                        openGame(game.name);
+                    };
+
+                    container.appendChild(card);
+
+                });
+
+                updateFavouriteButtons();
+                updateGames();
+
+            } catch (error) {
+                console.log("Could not load new releases:", error);
+                container.innerHTML = "<p>Could not load new releases.</p>";
+            }
+
+        } else {
+            container.innerHTML = "<p>Could not load new releases.</p>";
+        }
+
+    };
+
+    request.onerror = function() {
+        container.innerHTML = "<p>Could not connect to the server.</p>";
+    };
+
+    request.send();
+}
+
+/* LOAD DOWNLOADED GAMES */
+
+function loadAutomaticGames() {
+
+    var container = document.getElementById("automaticGames");
+    var request = new XMLHttpRequest();
+
+    request.open("GET", "/api/library", true);
+
+    request.onload = function() {
+
+        if (request.status >= 200 && request.status < 300) {
+
+            try {
+
+                automaticGames = JSON.parse(request.responseText);
+                container.innerHTML = "";
+
+                if (!automaticGames || automaticGames.length === 0) {
+                    container.innerHTML =
+                        "<p>Your library is empty. Download a game from the shop to see it here!</p>";
+                    return;
+                }
+
+                automaticGames.forEach(function(game) {
+
+                    var card = document.createElement("article");
+                    card.className = "game-card grid-card automatic-game";
+                    card.setAttribute("data-name", game.name);
+                    card.setAttribute("data-library-game", "true");
+                    card.setAttribute("data-category", game.category || "Uncategorised");
+
+                    var img = document.createElement("img");
+
+                    img.src = game.artwork
+                        ? game.artwork
+                        : "assets/eshop/featured1.png";
+
+                    img.alt = game.name;
+
+                    img.onerror = function() {
+                        this.onerror = null;
+                        this.src = "assets/eshop/featured1.png";
+                    };
+
+                    var info = document.createElement("div");
+                    info.className = "grid-info";
+
+                    var title = document.createElement("h3");
+                    title.textContent = game.name;
+
+                    var favourite = document.createElement("button");
+                    favourite.className = "favourite-button";
+                    favourite.textContent = "♡";
+
+                    favourite.onclick = function(event) {
+                        event.stopPropagation();
+                        toggleFavourite(favourite);
+                    };
+
+                    info.appendChild(title);
+                    info.appendChild(favourite);
+
+                    card.appendChild(img);
+                    card.appendChild(info);
+
+                    card.onclick = function() {
+                        openGame(game.name);
+                    };
+
+                    container.appendChild(card);
+
+                });
+
+                updateFavouriteButtons();
+                updateGames();
+
+            } catch (error) {
+                console.log("Could not read game library:", error);
+                container.innerHTML = "<p>Could not read your game library.</p>";
+            }
+
+        } else {
+            container.innerHTML = "<p>Could not load your game library.</p>";
+        }
+
+    };
+
+    request.onerror = function() {
+        container.innerHTML = "<p>Could not connect to your game library.</p>";
+    };
+
+    request.send();
+}
+
+/* FILTER AND SEARCH GAMES */
+
+function updateGames() {
+
+    var cards = document.getElementsByClassName("game-card");
+    var query = document.getElementById("searchInput").value.toLowerCase();
+    var found = 0;
+
+    for (var i = 0; i < cards.length; i++) {
+
+        var card = cards[i];
+        var name = card.getAttribute("data-name") || "";
+
+        var visible = name.toLowerCase().indexOf(query) !== -1;
+
+        if (currentFilter === "new" &&
+            card.getAttribute("data-new") !== "true") {
+            visible = false;
+        }
+
+        if (currentFilter === "popular" &&
+            card.getAttribute("data-popular") !== "true") {
+            visible = false;
+        }
+
+        if (currentFilter === "favourites" &&
+            card.getAttribute("data-favourite") !== "true") {
+            visible = false;
+        }
+
+        if (currentFilter === "category") {
+
+            var gameCategory = (
+                card.getAttribute("data-category") || ""
+            ).toLowerCase().trim();
+
+            if (gameCategory !== selectedCategory.toLowerCase().trim()) {
+                visible = false;
+            }
+
+        }
+
+        card.style.display = visible ? "" : "none";
+
+        if (visible) {
+            found++;
+        }
+
+    }
+
+    document.getElementById("noResults").style.display =
+        found === 0 ? "block" : "none";
+}
+
+/* HOME */
+
+function showAllGames() {
+
+    currentFilter = "all";
+    selectedCategory = "";
+
+    document.getElementById("searchInput").value = "";
+    document.getElementById("gamesHeading").textContent = "New Releases";
+
+    var cards = document.getElementsByClassName("game-card");
+
+    for (var i = 0; i < cards.length; i++) {
+        cards[i].style.display = "";
+    }
+
+    document.getElementById("noResults").style.display = "none";
+    window.location.hash = "";
+}
+
+/* NEW RELEASES */
+
+function showNewGames() {
+
+    currentFilter = "new";
+    selectedCategory = "";
+
+    document.getElementById("gamesHeading").textContent = "New Releases";
+
+    updateGames();
+    window.location.hash = "new";
+}
+
+/* POPULAR */
+
+function showPopular() {
+
+    currentFilter = "popular";
+    selectedCategory = "";
+
+    document.getElementById("gamesHeading").textContent = "Popular Games";
+
+    updateGames();
+    window.location.hash = "new";
+}
+
+/* FAVOURITES */
+
+function showFavourites() {
+
+    currentFilter = "favourites";
+    selectedCategory = "";
+
+    document.getElementById("gamesHeading").textContent = "Favourites";
+
+    updateGames();
+    window.location.hash = "new";
+}
+
+/* CATEGORIES */
+
+function showCategories() {
+
+    currentFilter = "all";
+    selectedCategory = "";
+
+    document.getElementById("searchInput").value = "";
+    document.getElementById("gamesHeading").textContent = "New Releases";
+
+    updateGames();
+    window.location.hash = "categories";
+}
+
+/* SHOW ONE CATEGORY */
+
+function showCategory(category) {
+
+    currentFilter = "category";
+    selectedCategory = category;
+
+    document.getElementById("searchInput").value = "";
+    document.getElementById("gamesHeading").textContent = category + " Games";
+
+    updateGames();
+
+    window.location.hash = "new";
+}
+
+/* SEARCH */
+
+function searchGames() {
+
+    currentFilter = "all";
+    selectedCategory = "";
+
+    document.getElementById("gamesHeading").textContent = "Search Results";
+
+    updateGames();
+    window.location.hash = "new";
+}
+
+document.getElementById("searchInput").onkeyup = searchGames;
+
+/* TOGGLE FAVOURITE */
+
+function toggleFavourite(button) {
+
+    var card = button.parentNode;
+
+    while (card && card.className.indexOf("game-card") === -1) {
+        card = card.parentNode;
+    }
+
+    if (!card) return;
+
+    var name = card.getAttribute("data-name");
+    var favourites = [];
+
+    try {
+        favourites = JSON.parse(
+            localStorage.getItem("eshopFavourites") || "[]"
+        );
+    } catch (error) {
+        favourites = [];
+    }
+
+    var index = favourites.indexOf(name);
+
+    if (index === -1) {
+        favourites.push(name);
+    } else {
+        favourites.splice(index, 1);
+    }
+
+    localStorage.setItem(
+        "eshopFavourites",
+        JSON.stringify(favourites)
+    );
+
+    updateFavouriteButtons();
+    updateGames();
+}
+
+/* UPDATE FAVOURITE BUTTONS */
+
+function updateFavouriteButtons() {
+
+    var favourites = [];
+
+    try {
+        favourites = JSON.parse(
+            localStorage.getItem("eshopFavourites") || "[]"
+        );
+    } catch (error) {
+        favourites = [];
+    }
+
+    var cards = document.getElementsByClassName("game-card");
+
+    for (var i = 0; i < cards.length; i++) {
+
+        var name = cards[i].getAttribute("data-name");
+        var buttons = cards[i].getElementsByClassName("favourite-button");
+
+        if (buttons.length === 0) continue;
+
+        var saved = favourites.indexOf(name) !== -1;
+
+        cards[i].setAttribute(
+            "data-favourite",
+            saved ? "true" : "false"
+        );
+
+        buttons[0].textContent = saved ? "♥" : "♡";
+
+        buttons[0].className = saved
+            ? "favourite-button favourited"
+            : "favourite-button";
+
+    }
+}
+
+/* DOWNLOADS */
+
+function openDownloads() {
+    document.getElementById("downloadsPanel").style.display = "flex";
+    loadDownloads();
+}
+
+function closeDownloads() {
+    document.getElementById("downloadsPanel").style.display = "none";
+}
+
+/* FORMAT FILE SIZE */
+
+function formatDownloadSize(bytes) {
+
+    if (bytes < 1024) {
+        return bytes + " B";
+    }
+
+    if (bytes < 1024 * 1024) {
+        return (bytes / 1024).toFixed(2) + " KB";
+    }
+
+    if (bytes < 1024 * 1024 * 1024) {
+        return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+    }
+
+    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+}
+
+/* REMOVE DOWNLOAD */
+
+function removeDownload(id, button) {
+
+    if (!id || button.disabled) return;
+
+    button.disabled = true;
+    button.textContent = "Removing...";
+
+    var request = new XMLHttpRequest();
+
+    request.open(
+        "DELETE",
+        "/api/downloads/" + encodeURIComponent(id),
+        true
+    );
+
+    request.onload = function() {
+
+        if (request.status >= 200 && request.status < 300) {
+            loadDownloads();
+        } else {
+            button.disabled = false;
+            button.textContent = "Remove";
+            alert("Could not remove this download.");
+        }
+
+    };
+
+    request.onerror = function() {
+        button.disabled = false;
+        button.textContent = "Remove";
+        alert("Could not connect to the download server.");
+    };
+
+    request.send();
+}
+
+/* LOAD DOWNLOAD QUEUE */
+
+function loadDownloads() {
+
+    var container = document.getElementById("downloadsList");
+    var total = document.getElementById("downloadTotal");
+
+    container.innerHTML =
+        '<p class="download-empty">Loading downloads...</p>';
+
+    total.textContent = "";
+
+    var request = new XMLHttpRequest();
+
+    request.open("GET", "/api/downloads", true);
+
+    request.onload = function() {
+
+        if (request.status < 200 || request.status >= 300) {
+            container.textContent = "Could not load downloads.";
+            return;
+        }
+
+        try {
+
+            var result = JSON.parse(request.responseText);
+            var downloads = result.downloads || [];
+
+            container.innerHTML = "";
+
+            if (downloads.length === 0) {
+
+                container.innerHTML =
+                    '<p class="download-empty">You have no active downloads.</p>';
+
+                total.textContent = "0 downloads";
+                return;
+            }
+
+            var gamesRequest = new XMLHttpRequest();
+
+            gamesRequest.open("GET", "/api/games", true);
+
+            gamesRequest.onload = function() {
+
+                var games = [];
+
+                if (gamesRequest.status >= 200 &&
+                    gamesRequest.status < 300) {
+
+                    try {
+                        games = JSON.parse(gamesRequest.responseText);
+                    } catch (error) {
+                        games = [];
+                    }
+                }
+
+                for (var i = 0; i < downloads.length; i++) {
+
+                    var download = downloads[i];
+                    var artwork = "assets/eshop/featured1.png";
+
+                    for (var j = 0; j < games.length; j++) {
+
+                        if (games[j].name === download.name) {
+                            artwork = games[j].artwork ||
+                                "assets/eshop/featured1.png";
+                            break;
+                        }
+                    }
+
+                    var item = document.createElement("div");
+                    item.className = "download-item";
+
+                    var image = document.createElement("img");
+                    image.src = artwork;
+                    image.alt = download.name;
+
+                    image.onerror = function() {
+                        this.onerror = null;
+                        this.src = "assets/eshop/featured1.png";
+                    };
+
+                    var info = document.createElement("div");
+                    info.className = "download-item-info";
+
+                    var title = document.createElement("h3");
+                    title.textContent = download.name;
+
+                    var files = document.createElement("p");
+                    files.textContent =
+                        (download.totalFiles || 0) + " files";
+
+                    var size = document.createElement("p");
+                    size.textContent =
+                        formatDownloadSize(download.totalSize || 0);
+
+                    var status = document.createElement("p");
+                    status.className = "download-status";
+
+                    status.textContent =
+                        download.status === "queued"
+                        ? "Waiting for Wii U connection"
+                        : (download.message || download.status);
+
+                    var removeButton = document.createElement("button");
+                    removeButton.className = "remove-download";
+                    removeButton.textContent = "Remove";
+                    removeButton.type = "button";
+
+                    removeButton.onclick = function(id) {
+                        return function() {
+                            removeDownload(id, this);
+                        };
+                    }(download.id);
+
+                    info.appendChild(title);
+                    info.appendChild(files);
+                    info.appendChild(size);
+                    info.appendChild(status);
+
+                    item.appendChild(image);
+                    item.appendChild(info);
+                    item.appendChild(removeButton);
+
+                    container.appendChild(item);
+                }
+
+                total.textContent =
+                    downloads.length + " downloads in queue";
+            };
+
+            gamesRequest.onerror = function() {
+                container.textContent = "Could not load game artwork.";
+            };
+
+            gamesRequest.send();
+
+        } catch (error) {
+            container.textContent =
+                "Could not read download information.";
+        }
+    };
+
+    request.onerror = function() {
+        container.textContent =
+            "Could not connect to the download server.";
+    };
+
+    request.send();
+}
+
+/* HELP */
+
+function showHelp() {
+    alert("Welcome to the Nintendo eShop recreation!");
+}
+
+/* START THE SHOP */
+
+loadAutomaticGames();
+loadNewReleases();
+updateFavouriteButtons();
+
+</script>
+
+<!-- SHARED MUSIC PLAYER -->
+
+<script src="music.js"></script>
+
+</body>
+</html>
