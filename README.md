@@ -10,6 +10,8 @@ ftpiiu https://github.com/wiiu-env/ftpiiu_plugin/
 
 Node.js https://nodejs.org/en
 
+wup installer gx2 https://hb-app.store/wiiu/wup_installer_gx2_wuhb
+
 and also get node.js make sure to get legacy tools when Installig from the node.js installer
 
 Then open cmd and type. cd /d [Your Path here]
@@ -25,6 +27,8 @@ and in cmd type node start.js
 and There its done
 
 To learn how to add games thats in the games/Demo game 
+
+and after you download the game it saves in your install folder for wup installer gx2 and open wup installer gx2 to install the game and then play
 
 
 Also this project uses Ai for code Thanks chatgpt
