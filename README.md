@@ -21,4 +21,4 @@ and There its done
 To learn how to add games that in the games/Demo game 
 
 
-Also this project uses Ai for code chat gpt
+Also this project uses Ai for code Thanks chatgpt
