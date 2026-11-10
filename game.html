@@ -8,9 +8,7 @@
     <link rel="stylesheet" href="style.css">
 
     <style>
-        .detail-content {
-            padding: 25px;
-        }
+        .detail-content { padding: 25px; }
 
         .detail-heading {
             display: block;
@@ -96,9 +94,7 @@
 
         /* SOFTWARE BUTTONS */
 
-        .software-actions {
-            display: block;
-        }
+        .software-actions { display: block; }
 
         .software-price {
             display: inline-block;
@@ -189,6 +185,106 @@
             margin-top: 12px;
         }
 
+        /* UPDATE AND DLC CARDS */
+
+        .addon-card {
+            display: block;
+            width: 100%;
+            padding: 18px 0;
+            border-bottom: 1px solid #eee;
+            box-sizing: border-box;
+        }
+
+        .addon-card:last-child {
+            border-bottom: none;
+        }
+
+        .addon-top {
+            display: table;
+            width: 100%;
+        }
+
+        .addon-art {
+            display: table-cell;
+            vertical-align: top;
+            width: 115px;
+            padding-right: 18px;
+        }
+
+        .addon-art img {
+            display: block;
+            width: 100px;
+            height: 100px;
+            border-radius: 6px;
+            background: #f2f2f2;
+        }
+
+        .addon-info {
+            display: table-cell;
+            vertical-align: top;
+        }
+
+        .addon-info h3 {
+            color: #333;
+            font-size: 18px;
+            margin: 2px 0 9px;
+        }
+
+        .addon-description {
+            color: #666;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            margin: 0 0 10px;
+        }
+
+        .addon-meta {
+            color: #888;
+            font-size: 12px;
+            margin: 8px 0;
+        }
+
+        .addon-download {
+            background: #00a5cf;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .addon-download:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .addon-status {
+            color: #00a5cf;
+            font-size: 13px;
+            margin: 8px 0 0;
+        }
+
+        .addon-screenshots {
+            margin-top: 15px;
+        }
+
+        .addon-screenshots img {
+            display: inline-block;
+            vertical-align: top;
+            width: 27%;
+            height: 105px;
+            margin: 1%;
+            border-radius: 5px;
+            background: #f4f4f4;
+            cursor: pointer;
+        }
+
+        .addon-empty {
+            color: #888;
+            padding: 10px 0;
+        }
+
         /* SCREENSHOT VIEWER */
 
         .screenshot-viewer {
@@ -205,9 +301,7 @@
             box-sizing: border-box;
         }
 
-        .screenshot-viewer.active {
-            display: block;
-        }
+        .screenshot-viewer.active { display: block; }
 
         .screenshot-viewer img {
             max-width: 95%;
@@ -249,13 +343,8 @@
             background: rgba(255,255,255,0.3);
         }
 
-        .screenshot-prev {
-            left: 15px;
-        }
-
-        .screenshot-next {
-            right: 15px;
-        }
+        .screenshot-prev { left: 15px; }
+        .screenshot-next { right: 15px; }
 
         .screenshot-counter {
             color: white;
@@ -325,8 +414,6 @@
             margin-bottom: 18px;
         }
 
-        /* DOWNLOAD ITEMS */
-
         .download-item {
             display: table;
             width: 100%;
@@ -367,8 +454,6 @@
             font-weight: bold;
         }
 
-        /* REMOVE BUTTON */
-
         .remove-download {
             display: table-cell;
             vertical-align: middle;
@@ -408,10 +493,7 @@
         /* SMALLER SCREENS */
 
         @media (max-width: 700px) {
-
-            .software-panel {
-                display: block;
-            }
+            .software-panel { display: block; }
 
             .software-art {
                 display: block;
@@ -425,25 +507,17 @@
                 width: 100%;
             }
 
-            .screenshot-viewer {
-                padding: 55px 45px;
-            }
-
-            .screenshots-grid img {
-                width: 45%;
-            }
+            .screenshot-viewer { padding: 55px 45px; }
+            .screenshots-grid img { width: 45%; }
         }
 
         @media (max-width: 500px) {
-
             .download-item img {
                 width: 65px;
                 height: 65px;
             }
 
-            .download-item-info {
-                padding: 0 7px;
-            }
+            .download-item-info { padding: 0 7px; }
 
             .remove-download {
                 padding: 7px;
@@ -453,6 +527,20 @@
             .downloads-box {
                 width: 95%;
                 padding: 15px;
+            }
+
+            .addon-art {
+                width: 85px;
+                padding-right: 10px;
+            }
+
+            .addon-art img {
+                width: 75px;
+                height: 75px;
+            }
+
+            .addon-screenshots img {
+                width: 43%;
             }
         }
     </style>
@@ -546,6 +634,20 @@
                 <p id="fullDescription">Loading software description...</p>
             </section>
 
+            <!-- UPDATES -->
+
+            <section class="detail-section" id="updatesSection" style="display:none;">
+                <h2>Updates</h2>
+                <div id="updatesList"></div>
+            </section>
+
+            <!-- DLC -->
+
+            <section class="detail-section" id="dlcSection" style="display:none;">
+                <h2>Downloadable Content</h2>
+                <div id="dlcList"></div>
+            </section>
+
             <section class="detail-section">
                 <h2>Screenshots</h2>
 
@@ -573,7 +675,7 @@
     <button class="screenshot-nav screenshot-prev"
             onclick="changeScreenshot(-1, event)">‹</button>
 
-    <img id="largeScreenshot" src="" alt="Enlarged game screenshot">
+    <img id="largeScreenshot" src="" alt="Enlarged screenshot">
 
     <button class="screenshot-nav screenshot-next"
             onclick="changeScreenshot(1, event)">›</button>
@@ -610,8 +712,6 @@
 
 var currentGame = null;
 var gameName = getQueryParameter("name");
-
-/* SCREENSHOT VIEWER DATA */
 
 var availableScreenshots = [];
 var currentScreenshotIndex = 0;
@@ -745,7 +845,7 @@ function displayGame() {
 }
 
 
-/* LOAD DESCRIPTION AND SCREENSHOTS */
+/* LOAD DESCRIPTION, SCREENSHOTS, UPDATES AND DLC */
 
 function loadGameDetails() {
 
@@ -776,6 +876,22 @@ function loadGameDetails() {
 
                 loadScreenshots(details.screenshots || []);
 
+                /* NEW: LOAD UPDATE AND DLC CARDS */
+
+                loadAddonSection(
+                    "updatesSection",
+                    "updatesList",
+                    details.updates || [],
+                    "Updates"
+                );
+
+                loadAddonSection(
+                    "dlcSection",
+                    "dlcList",
+                    details.dlc || [],
+                    "DLC"
+                );
+
             } catch (error) {
 
                 console.log("Could not read game details:", error);
@@ -804,6 +920,192 @@ function useFallbackDetails() {
         "No description has been added yet.";
 
     loadScreenshots(currentGame.screenshots || []);
+
+    document.getElementById("updatesSection").style.display = "none";
+    document.getElementById("dlcSection").style.display = "none";
+}
+
+
+/* LOAD AN UPDATE OR DLC SECTION */
+
+function loadAddonSection(sectionId, listId, addons, type) {
+
+    var section = document.getElementById(sectionId);
+    var container = document.getElementById(listId);
+
+    container.innerHTML = "";
+
+    if (!addons || addons.length === 0) {
+        section.style.display = "none";
+        return;
+    }
+
+    section.style.display = "block";
+
+    for (var i = 0; i < addons.length; i++) {
+
+        var addon = addons[i];
+
+        var card = document.createElement("div");
+        card.className = "addon-card";
+
+        var top = document.createElement("div");
+        top.className = "addon-top";
+
+        var artBox = document.createElement("div");
+        artBox.className = "addon-art";
+
+        var icon = document.createElement("img");
+        icon.src = addon.icon || "assets/eshop/featured1.png";
+        icon.alt = addon.name + " icon";
+
+        icon.onerror = function() {
+            this.onerror = null;
+            this.src = "assets/eshop/featured1.png";
+        };
+
+        artBox.appendChild(icon);
+
+        var info = document.createElement("div");
+        info.className = "addon-info";
+
+        var title = document.createElement("h3");
+        title.textContent = addon.name;
+
+        var description = document.createElement("p");
+        description.className = "addon-description";
+        description.textContent =
+            addon.description || "No description has been added yet.";
+
+        var meta = document.createElement("p");
+        meta.className = "addon-meta";
+        meta.textContent =
+            addon.totalFiles + " files · " +
+            formatDownloadSize(addon.totalSize);
+
+        var button = document.createElement("button");
+        button.className = "addon-download";
+        button.type = "button";
+        button.textContent = "↓ Download";
+
+        var status = document.createElement("p");
+        status.className = "addon-status";
+
+        button.onclick = function(addonType, addonName, buttonElement, statusElement) {
+            return function() {
+                startAddonDownload(
+                    addonType,
+                    addonName,
+                    buttonElement,
+                    statusElement
+                );
+            };
+        }(type, addon.name, button, status);
+
+        info.appendChild(title);
+        info.appendChild(description);
+        info.appendChild(meta);
+        info.appendChild(button);
+        info.appendChild(status);
+
+        top.appendChild(artBox);
+        top.appendChild(info);
+        card.appendChild(top);
+
+        /* ADD-ON SCREENSHOTS */
+
+        if (addon.screenshots && addon.screenshots.length > 0) {
+
+            var screenshotBox = document.createElement("div");
+            screenshotBox.className = "addon-screenshots";
+
+            for (var j = 0; j < addon.screenshots.length; j++) {
+
+                var screenshot = document.createElement("img");
+                screenshot.src = addon.screenshots[j];
+                screenshot.alt = addon.name + " screenshot " + (j + 1);
+
+                screenshot.onclick = function(imageList, imageIndex) {
+                    return function() {
+                        availableScreenshots = imageList.slice(0);
+                        openScreenshotViewer(imageIndex);
+                    };
+                }(addon.screenshots, j);
+
+                screenshot.onerror = function() {
+                    this.style.display = "none";
+                };
+
+                screenshotBox.appendChild(screenshot);
+            }
+
+            card.appendChild(screenshotBox);
+        }
+
+        container.appendChild(card);
+    }
+}
+
+
+/* DOWNLOAD AN UPDATE OR DLC PACKAGE */
+
+function startAddonDownload(type, addonName, button, status) {
+
+    if (!currentGame || button.disabled) return;
+
+    button.disabled = true;
+    button.textContent = "Adding...";
+
+    status.textContent = "Adding package to download queue...";
+
+    var request = new XMLHttpRequest();
+
+    request.open("POST", "/api/downloads", true);
+    request.setRequestHeader("Content-Type", "application/json");
+
+    request.onload = function() {
+
+        button.disabled = false;
+        button.textContent = "↓ Download";
+
+        try {
+
+            var result = JSON.parse(request.responseText);
+
+            if (request.status >= 200 && request.status < 300) {
+
+                status.textContent = result.alreadyQueued
+                    ? "Already in the download queue."
+                    : "Added to Downloads!";
+
+            } else {
+
+                status.textContent =
+                    result.error || "Could not add package.";
+
+            }
+
+        } catch (error) {
+
+            status.textContent = "Could not read server response.";
+
+        }
+    };
+
+    request.onerror = function() {
+
+        button.disabled = false;
+        button.textContent = "↓ Download";
+
+        status.textContent = "Could not connect to the server.";
+
+    };
+
+    request.send(JSON.stringify({
+        name: currentGame.name,
+        type: type,
+        addon: addonName
+    }));
 }
 
 
@@ -837,19 +1139,7 @@ function loadScreenshots(screenshotList) {
         };
 
         image.onerror = function() {
-            var index = parseInt(
-                this.getAttribute("data-screenshot-index"), 10
-            );
-
-            if (availableScreenshots[index] === this.src) {
-                availableScreenshots[index] = null;
-            }
-
-            this.parentNode.removeChild(this);
-
-            if (container.getElementsByTagName("img").length === 0) {
-                container.textContent = "No screenshots available.";
-            }
+            this.style.display = "none";
         };
 
         availableScreenshots.push(image.src);
@@ -935,7 +1225,7 @@ document.addEventListener("keydown", function(event) {
 
     var viewer = document.getElementById("screenshotViewer");
 
-    if (!viewer.classList.contains("active")) return;
+    if (viewer.className.indexOf("active") === -1) return;
 
     if (event.key === "Escape") {
         closeScreenshotViewer();
@@ -1009,7 +1299,7 @@ function updateFavouriteButton() {
 }
 
 
-/* DOWNLOAD BUTTON - ADD TO SERVER QUEUE */
+/* MAIN GAME DOWNLOAD */
 
 var downloadChecking = false;
 
@@ -1040,21 +1330,15 @@ function startDownload() {
             var result = JSON.parse(request.responseText);
 
             if (request.status >= 200 && request.status < 300) {
-
                 status.textContent =
                     currentGame.name + " added to Downloads!";
-
             } else {
-
                 status.textContent =
                     result.error || "Could not add game to Downloads.";
-
             }
 
         } catch (error) {
-
             status.textContent = "Could not read server response.";
-
         }
 
     };
@@ -1078,17 +1362,13 @@ function startDownload() {
 /* DOWNLOADS PANEL */
 
 function openDownloads() {
-
     document.getElementById("downloadsPanel").style.display = "block";
-
     loadDownloads();
 }
 
 
 function closeDownloads() {
-
     document.getElementById("downloadsPanel").style.display = "none";
-
 }
 
 
@@ -1096,9 +1376,7 @@ function closeDownloads() {
 
 function formatDownloadSize(bytes) {
 
-    if (bytes < 1024) {
-        return bytes + " B";
-    }
+    if (bytes < 1024) return bytes + " B";
 
     if (bytes < 1024 * 1024) {
         return (bytes / 1024).toFixed(2) + " KB";
@@ -1109,7 +1387,6 @@ function formatDownloadSize(bytes) {
     }
 
     return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
-
 }
 
 
@@ -1137,7 +1414,6 @@ function removeDownload(id, button) {
         } else {
             button.disabled = false;
             button.textContent = "Remove";
-
             alert("Could not remove this download.");
         }
 
@@ -1147,13 +1423,11 @@ function removeDownload(id, button) {
 
         button.disabled = false;
         button.textContent = "Remove";
-
         alert("Could not connect to the download server.");
 
     };
 
     request.send();
-
 }
 
 
@@ -1197,8 +1471,6 @@ function loadDownloads() {
 
             }
 
-            /* LOAD GAME ARTWORK */
-
             var gamesRequest = new XMLHttpRequest();
 
             gamesRequest.open("GET", "/api/games", true);
@@ -1215,10 +1487,7 @@ function loadDownloads() {
                     } catch (error) {
                         games = [];
                     }
-
                 }
-
-                /* DISPLAY DOWNLOADS */
 
                 for (var i = 0; i < downloads.length; i++) {
 
@@ -1233,7 +1502,6 @@ function loadDownloads() {
                                 "assets/eshop/featured1.png";
                             break;
                         }
-
                     }
 
                     var item = document.createElement("div");
@@ -1252,7 +1520,8 @@ function loadDownloads() {
                     info.className = "download-item-info";
 
                     var title = document.createElement("h3");
-                    title.textContent = download.name;
+                    title.textContent =
+                        download.displayName || download.name;
 
                     var files = document.createElement("p");
                     files.textContent =
@@ -1269,8 +1538,6 @@ function loadDownloads() {
                         download.status === "queued" ?
                         "Waiting for Wii U connection" :
                         (download.message || download.status);
-
-                    /* REMOVE BUTTON */
 
                     var removeButton = document.createElement("button");
                     removeButton.className = "remove-download";
@@ -1293,12 +1560,10 @@ function loadDownloads() {
                     item.appendChild(removeButton);
 
                     container.appendChild(item);
-
                 }
 
                 total.textContent =
                     downloads.length + " downloads in queue";
-
             };
 
             gamesRequest.onerror = function() {
@@ -1309,12 +1574,9 @@ function loadDownloads() {
             gamesRequest.send();
 
         } catch (error) {
-
             container.textContent =
                 "Could not read download information.";
-
         }
-
     };
 
     request.onerror = function() {
@@ -1323,7 +1585,6 @@ function loadDownloads() {
     };
 
     request.send();
-
 }
 
 
