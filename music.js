@@ -1,21 +1,27 @@
 
 /* SHARED NINTENDO ESHOP MUSIC PLAYER
-   Wii U-compatible autoplay attempt
+   MP4 with AAC audio
 */
 
 (function () {
 
-    var MUSIC_FILE = "assets/eshop/eshop-music.mp3";
+    var MUSIC_FILE = "assets/eshop/eshop-music.mp4";
     var STATE_KEY = "eshopMusicPlaying";
     var TIME_KEY = "eshopMusicPosition";
 
-    var music = document.createElement("audio");
+    var music = document.createElement("video");
+
     music.loop = true;
     music.preload = "auto";
+    music.playsInline = true;
+    music.setAttribute("playsinline", "");
+
+    // Keep the video invisible
+    music.style.display = "none";
 
     var source = document.createElement("source");
     source.src = MUSIC_FILE;
-    source.type = "audio/mpeg";
+    source.type = "video/mp4";
     music.appendChild(source);
 
     var player = document.createElement("div");
@@ -44,7 +50,9 @@
         } catch (error) {}
     }
 
-    var savedPosition = parseFloat(getStorage(TIME_KEY, "0"));
+    var savedPosition = parseFloat(
+        getStorage(TIME_KEY, "0")
+    );
 
     if (isNaN(savedPosition)) {
         savedPosition = 0;
@@ -58,7 +66,10 @@
 
     function savePosition() {
         try {
-            setStorage(TIME_KEY, String(music.currentTime));
+            setStorage(
+                TIME_KEY,
+                String(music.currentTime)
+            );
         } catch (error) {}
     }
 
@@ -78,7 +89,6 @@
                 setStorage(STATE_KEY, "true");
                 updateButton();
             }
-
         } catch (error) {
             setStorage(STATE_KEY, "false");
             updateButton();
@@ -97,29 +107,32 @@
     };
 
     music.onloadedmetadata = function () {
-
-        if (savedPosition > 0 && savedPosition < music.duration) {
+        if (
+            savedPosition > 0 &&
+            savedPosition < music.duration
+        ) {
             try {
                 music.currentTime = savedPosition;
             } catch (error) {}
         }
 
-        // Automatically attempt to start the music.
         playMusic();
     };
 
     music.ontimeupdate = savePosition;
-
     music.onplay = updateButton;
     music.onpause = updateButton;
 
     music.onerror = function () {
         button.innerHTML = "♫ Music unavailable";
+        console.log("Music error:", music.error);
     };
 
     window.onpagehide = savePosition;
     window.onunload = savePosition;
 
     updateButton();
+
+    music.load();
 
 })();
