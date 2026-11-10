@@ -8,42 +8,65 @@
     <link rel="stylesheet" href="style.css">
 
     <style>
-        .detail-content { padding: 25px; }
+        .detail-content {
+            padding: 25px;
+        }
 
         .detail-heading {
-            display: flex;
-            align-items: center;
-            gap: 15px;
+            display: block;
             margin-bottom: 25px;
         }
 
-        .detail-heading h1 { margin: 0; color: #333; }
-
-        .detail-heading-line {
-            height: 2px;
-            background: #ddd;
-            flex: 1;
+        .detail-heading span {
+            display: inline-block;
+            vertical-align: middle;
         }
 
+        .detail-heading-line {
+            display: inline-block;
+            vertical-align: middle;
+            height: 2px;
+            width: 55%;
+            background: #ddd;
+            margin-left: 15px;
+        }
+
+        .detail-heading h1 {
+            margin: 0;
+            color: #333;
+        }
+
+        /* SOFTWARE PANEL */
+
         .software-panel {
-            display: flex;
-            gap: 30px;
+            display: table;
+            width: 100%;
             background: white;
             padding: 25px;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-sizing: border-box;
         }
 
-        .software-art { width: 42%; min-width: 250px; }
+        .software-art {
+            display: table-cell;
+            width: 42%;
+            vertical-align: top;
+            padding-right: 30px;
+        }
 
         .software-art img {
             width: 100%;
+            height: auto;
             display: block;
-            object-fit: contain;
             border-radius: 5px;
         }
 
-        .software-info { flex: 1; min-width: 0; }
+        .software-info {
+            display: table-cell;
+            vertical-align: top;
+            width: 58%;
+        }
 
         .software-label {
             color: #00a5cf;
@@ -71,21 +94,25 @@
             line-height: 1.8;
         }
 
+        /* SOFTWARE BUTTONS */
+
         .software-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
+            display: block;
         }
 
         .software-price {
+            display: inline-block;
+            vertical-align: middle;
             font-size: 25px;
             font-weight: bold;
             color: #333;
             margin-right: 10px;
+            margin-bottom: 8px;
         }
 
         .detail-download {
+            display: inline-block;
+            vertical-align: middle;
             background: #00a5cf;
             color: white;
             border: none;
@@ -93,6 +120,7 @@
             border-radius: 4px;
             font-size: 16px;
             cursor: pointer;
+            margin: 3px;
         }
 
         .detail-download:disabled {
@@ -101,6 +129,8 @@
         }
 
         .detail-favourite {
+            display: inline-block;
+            vertical-align: middle;
             background: #eee;
             color: #555;
             border: none;
@@ -108,6 +138,7 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 15px;
+            margin: 3px;
         }
 
         .detail-section {
@@ -131,25 +162,25 @@
             white-space: pre-wrap;
         }
 
+        /* SCREENSHOTS */
+
         .screenshots-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
+            display: block;
+            width: 100%;
         }
 
         .screenshots-grid img {
-            display: block;
-            width: 100%;
+            display: inline-block;
+            vertical-align: top;
+            width: 30%;
             height: 150px;
+            margin: 1%;
             border-radius: 5px;
-            object-fit: contain;
             background: #f4f4f4;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .screenshots-grid img:hover {
-            transform: scale(1.03);
             box-shadow: 0 3px 12px rgba(0,0,0,0.2);
         }
 
@@ -163,24 +194,27 @@
         .screenshot-viewer {
             display: none;
             position: fixed;
-            inset: 0;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(0,0,0,0.94);
             z-index: 99999;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
+            text-align: center;
             padding: 55px 75px;
+            box-sizing: border-box;
         }
 
         .screenshot-viewer.active {
-            display: flex;
+            display: block;
         }
 
         .screenshot-viewer img {
-            width: 95vw;
-            height: 88vh;
-            max-width: 1800px;
-            object-fit: contain;
+            max-width: 95%;
+            max-height: 75%;
+            width: auto;
+            height: auto;
+            margin-top: 20px;
             border-radius: 4px;
             box-shadow: 0 5px 30px rgba(0,0,0,0.5);
         }
@@ -199,7 +233,7 @@
         .screenshot-nav {
             position: absolute;
             top: 50%;
-            transform: translateY(-50%);
+            margin-top: -24px;
             color: white;
             background: rgba(255,255,255,0.15);
             border: none;
@@ -215,8 +249,13 @@
             background: rgba(255,255,255,0.3);
         }
 
-        .screenshot-prev { left: 15px; }
-        .screenshot-next { right: 15px; }
+        .screenshot-prev {
+            left: 15px;
+        }
+
+        .screenshot-next {
+            right: 15px;
+        }
 
         .screenshot-counter {
             color: white;
@@ -229,24 +268,33 @@
         .downloads-panel {
             display: none;
             position: fixed;
-            inset: 0;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             z-index: 99998;
             background: rgba(0,0,0,0.65);
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            text-align: center;
+            overflow-y: auto;
+            box-sizing: border-box;
+            padding: 30px 10px;
         }
 
         .downloads-box {
+            display: inline-block;
+            vertical-align: middle;
+            text-align: left;
             background: white;
-            width: 100%;
+            width: 90%;
             max-width: 650px;
-            max-height: 85vh;
+            max-height: 85%;
             overflow-y: auto;
             padding: 25px;
             border-radius: 8px;
             position: relative;
             box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+            box-sizing: border-box;
+            margin-top: 20px;
         }
 
         .downloads-box h2 {
@@ -277,25 +325,29 @@
             margin-bottom: 18px;
         }
 
+        /* DOWNLOAD ITEMS */
+
         .download-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
+            display: table;
+            width: 100%;
             padding: 15px 0;
             border-bottom: 1px solid #eee;
         }
 
         .download-item img {
+            display: table-cell;
+            vertical-align: middle;
             width: 85px;
             height: 85px;
-            object-fit: contain;
             background: #f4f4f4;
             border-radius: 5px;
         }
 
         .download-item-info {
-            flex: 1;
-            min-width: 0;
+            display: table-cell;
+            vertical-align: middle;
+            padding: 0 12px;
+            width: 100%;
         }
 
         .download-item-info h3 {
@@ -318,6 +370,8 @@
         /* REMOVE BUTTON */
 
         .remove-download {
+            display: table-cell;
+            vertical-align: middle;
             background: #eee;
             color: #555;
             border: 1px solid #ddd;
@@ -325,7 +379,7 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 13px;
-            flex-shrink: 0;
+            white-space: nowrap;
         }
 
         .remove-download:hover {
@@ -351,25 +405,54 @@
             margin-top: 18px;
         }
 
+        /* SMALLER SCREENS */
+
         @media (max-width: 700px) {
-            .software-panel { flex-direction: column; }
-            .software-art { width: 100%; min-width: 0; }
-            .screenshot-viewer { padding: 55px 45px; }
+
+            .software-panel {
+                display: block;
+            }
+
+            .software-art {
+                display: block;
+                width: 100%;
+                padding-right: 0;
+                margin-bottom: 20px;
+            }
+
+            .software-info {
+                display: block;
+                width: 100%;
+            }
+
+            .screenshot-viewer {
+                padding: 55px 45px;
+            }
+
+            .screenshots-grid img {
+                width: 45%;
+            }
         }
 
         @media (max-width: 500px) {
+
             .download-item img {
                 width: 65px;
                 height: 65px;
             }
 
-            .download-item {
-                gap: 9px;
-                flex-wrap: wrap;
+            .download-item-info {
+                padding: 0 7px;
             }
 
             .remove-download {
-                margin-left: auto;
+                padding: 7px;
+                font-size: 12px;
+            }
+
+            .downloads-box {
+                width: 95%;
+                padding: 15px;
             }
         }
     </style>
@@ -996,7 +1079,7 @@ function startDownload() {
 
 function openDownloads() {
 
-    document.getElementById("downloadsPanel").style.display = "flex";
+    document.getElementById("downloadsPanel").style.display = "block";
 
     loadDownloads();
 }
