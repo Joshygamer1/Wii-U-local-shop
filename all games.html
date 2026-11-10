@@ -12,21 +12,29 @@
             padding: 25px;
         }
 
+        /* WII U COMPATIBLE GAME GRID */
+
         .all-games-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-            gap: 20px;
+            display: block;
+            width: 100%;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
         }
 
         .all-game-card {
+            display: inline-block;
+            vertical-align: top;
+            width: 30%;
+            margin: 0 1% 20px 1%;
             cursor: pointer;
             overflow: hidden;
         }
 
         .all-game-card img {
+            display: block;
             width: 100%;
-            height: 150px;
-            object-fit: contain;
+            height: auto;
         }
 
         .all-game-info {
@@ -35,10 +43,24 @@
 
         .all-game-info h3 {
             margin: 0;
+            font-size: 14px;
+            color: #48535a;
         }
 
         .page-heading {
             margin-bottom: 25px;
+        }
+
+        /* SMALLER SCREENS */
+
+        @media screen and (max-width: 750px) {
+            .main-content {
+                padding: 18px 12px;
+            }
+
+            .all-game-card {
+                width: 46%;
+            }
         }
     </style>
 </head>
