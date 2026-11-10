@@ -1,4 +1,3 @@
-
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
@@ -10,16 +9,15 @@ const HOST = "0.0.0.0";
 const ROOT = __dirname;
 const GAMES_FOLDER = path.join(ROOT, "games");
 
-/* WII U FTP SETTINGS */
-
 const WIIU_IP = process.env.WIIU_IP || "YOURWIIUIPHERE";
 const WIIU_FTP_PORT = YOURWIIUPORTHERE;
 const WIIU_INSTALL_PATH = "/fs/vol/external01/install";
 
-/* DOWNLOAD QUEUE */
-
 const downloadQueue = [];
 let downloadWorkerRunning = false;
+
+const WUP_EXTENSIONS = [".app", ".h3", ".tik", ".tmd", ".cert"];
+const IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
 
 const mimeTypes = {
     ".html": "text/html; charset=utf-8",
@@ -37,33 +35,59 @@ const mimeTypes = {
     ".mp4": "video/mp4"
 };
 
-/* CONNECT TO WII U FTP */
+/* BASIC VALIDATION */
+
+function safeFolderName(name) {
+    return typeof name === "string" &&
+        name.length > 0 &&
+        name !== "." &&
+        name !== ".." &&
+        !name.includes("/") &&
+        !name.includes("\\") &&
+        !name.includes("\0") &&
+        path.basename(name) === name;
+}
+
+function getSafeGameFolder(name) {
+    if (!safeFolderName(name)) return null;
+
+    const folder = path.resolve(GAMES_FOLDER, name);
+    const root = path.resolve(GAMES_FOLDER);
+
+    if (!folder.startsWith(root + path.sep)) return null;
+    if (!fs.existsSync(folder)) return null;
+    if (!fs.statSync(folder).isDirectory()) return null;
+
+    return folder;
+}
+
+/* FTP CONNECTION */
 
 async function connectWiiUFTP() {
     const client = new ftp.Client(15000);
     client.ftp.verbose = false;
 
-    await client.access({
-        host: WIIU_IP,
-        port: WIIU_FTP_PORT,
-        user: "anonymous",
-        password: "",
-        secure: false
-    });
+    try {
+        await client.access({
+            host: WIIU_IP,
+            port: WIIU_FTP_PORT,
+            user: "anonymous",
+            password: "",
+            secure: false
+        });
 
-    return client;
+        return client;
+    } catch (error) {
+        client.close();
+        throw error;
+    }
 }
-
-/* TEST WII U FTP CONNECTION */
 
 async function testWiiUConnection() {
     let client;
 
     try {
-        console.log("Connecting to Wii U FTP...");
-
         client = await connectWiiUFTP();
-
         const files = await client.list();
 
         return {
@@ -75,21 +99,14 @@ async function testWiiUConnection() {
                 type: file.isDirectory ? "folder" : "file"
             }))
         };
-
     } catch (error) {
-        console.log("Wii U FTP connection failed:", error.message);
-
-        return {
-            success: false,
-            message: error.message
-        };
-
+        return { success: false, message: error.message };
     } finally {
         if (client) client.close();
     }
 }
 
-/* VALIDATE WII U DIRECTORY PATH */
+/* FTP BROWSER */
 
 function validateWiiUPath(remotePath) {
     if (
@@ -97,9 +114,7 @@ function validateWiiUPath(remotePath) {
         !remotePath.startsWith("/fs") ||
         remotePath.includes("\\") ||
         remotePath.includes("\0")
-    ) {
-        return null;
-    }
+    ) return null;
 
     const parts = remotePath.split("/");
 
@@ -107,33 +122,24 @@ function validateWiiUPath(remotePath) {
         return null;
     }
 
-    if (
-        remotePath !== "/fs" &&
-        !remotePath.startsWith("/fs/")
-    ) {
+    if (remotePath !== "/fs" && !remotePath.startsWith("/fs/")) {
         return null;
     }
 
     return remotePath.replace(/\/+$/, "") || "/fs";
 }
 
-/* BROWSE WII U DIRECTORY */
-
 async function browseWiiUDirectory(remotePath) {
     const safePath = validateWiiUPath(remotePath);
 
     if (!safePath) {
-        return {
-            success: false,
-            error: "Invalid directory path"
-        };
+        return { success: false, error: "Invalid directory path" };
     }
 
     let client;
 
     try {
         client = await connectWiiUFTP();
-
         const files = await client.list(safePath);
 
         return {
@@ -150,17 +156,147 @@ async function browseWiiUDirectory(remotePath) {
                         : null
                 }))
         };
-
     } catch (error) {
         return {
             success: false,
             path: safePath,
             error: error.message
         };
-
     } finally {
         if (client) client.close();
     }
+}
+
+/* FIND PACKAGE FILES */
+
+function getPackageFiles(folder, displayName) {
+    if (!fs.existsSync(folder) || !fs.statSync(folder).isDirectory()) {
+        return null;
+    }
+
+    const files = fs.readdirSync(folder, { withFileTypes: true })
+        .filter(item => item.isFile())
+        .filter(item => WUP_EXTENSIONS.includes(
+            path.extname(item.name).toLowerCase()
+        ))
+        .map(item => ({
+            name: item.name,
+            size: fs.statSync(path.join(folder, item.name)).size
+        }));
+
+    return {
+        name: displayName,
+        files,
+        totalFiles: files.length,
+        totalSize: files.reduce((sum, file) => sum + file.size, 0)
+    };
+}
+
+/* MAIN GAME FILES */
+
+function getGameDownloadFiles(name) {
+    const folder = getSafeGameFolder(name);
+    if (!folder) return null;
+
+    return getPackageFiles(folder, name);
+}
+
+/* ADD-ON DETAILS */
+
+function getAddonEntries(gameName, type) {
+    if (type !== "DLC" && type !== "Updates") return [];
+
+    const gameFolder = getSafeGameFolder(gameName);
+    if (!gameFolder) return [];
+
+    const addonRoot = path.join(gameFolder, type);
+
+    if (
+        !fs.existsSync(addonRoot) ||
+        !fs.statSync(addonRoot).isDirectory()
+    ) return [];
+
+    return fs.readdirSync(addonRoot, { withFileTypes: true })
+        .filter(item => item.isDirectory() && safeFolderName(item.name))
+        .map(item => {
+            const folder = path.join(addonRoot, item.name);
+            const packageInfo = getPackageFiles(folder, item.name);
+
+            if (!packageInfo || packageInfo.totalFiles === 0) return null;
+
+            let icon = null;
+
+            const iconNames = [
+                "icon.png",
+                "icon.jpg",
+                "cover.png",
+                "cover.jpg"
+            ];
+
+            for (const filename of iconNames) {
+                const iconPath = path.join(folder, filename);
+
+                if (
+                    fs.existsSync(iconPath) &&
+                    fs.statSync(iconPath).isFile()
+                ) {
+                    icon = "/games/" +
+                        encodeURIComponent(gameName) + "/" +
+                        encodeURIComponent(type) + "/" +
+                        encodeURIComponent(item.name) + "/" +
+                        filename;
+                    break;
+                }
+            }
+
+            const descriptionPath = path.join(
+                folder,
+                "About this software.txt"
+            );
+
+            let description = "";
+
+            if (
+                fs.existsSync(descriptionPath) &&
+                fs.statSync(descriptionPath).isFile()
+            ) {
+                description = fs.readFileSync(descriptionPath, "utf8");
+            }
+
+            const screenshots = [];
+
+            for (let i = 1; i <= 5; i++) {
+                for (const extension of IMAGE_EXTENSIONS) {
+                    const filename = "screenshot" + i + extension;
+                    const screenshotPath = path.join(folder, filename);
+
+                    if (
+                        fs.existsSync(screenshotPath) &&
+                        fs.statSync(screenshotPath).isFile()
+                    ) {
+                        screenshots.push(
+                            "/games/" +
+                            encodeURIComponent(gameName) + "/" +
+                            encodeURIComponent(type) + "/" +
+                            encodeURIComponent(item.name) + "/" +
+                            filename
+                        );
+                        break;
+                    }
+                }
+            }
+
+            return {
+                name: item.name,
+                type,
+                icon,
+                description,
+                screenshots,
+                totalFiles: packageInfo.totalFiles,
+                totalSize: packageInfo.totalSize
+            };
+        })
+        .filter(Boolean);
 }
 
 /* GET GAME LIBRARY */
@@ -171,84 +307,50 @@ function getGames() {
         return [];
     }
 
-    return fs.readdirSync(GAMES_FOLDER, {
-        withFileTypes: true
-    })
-    .filter(item => item.isDirectory())
-    .map(item => {
-        const name = item.name;
-        const folder = path.join(GAMES_FOLDER, name);
+    return fs.readdirSync(GAMES_FOLDER, { withFileTypes: true })
+        .filter(item => item.isDirectory())
+        .map(item => {
+            const name = item.name;
+            const folder = path.join(GAMES_FOLDER, name);
 
-        const artworkNames = [
-            "icon.png",
-            "cover.png",
-            "banner.png",
-            "icon.jpg",
-            "cover.jpg"
-        ];
+            let artwork = null;
 
-        let artwork = null;
+            for (const filename of [
+                "icon.png", "cover.png", "banner.png",
+                "icon.jpg", "cover.jpg"
+            ]) {
+                const artworkPath = path.join(folder, filename);
 
-        for (const filename of artworkNames) {
-            const artworkPath = path.join(folder, filename);
+                if (
+                    fs.existsSync(artworkPath) &&
+                    fs.statSync(artworkPath).isFile()
+                ) {
+                    artwork = "/games/" +
+                        encodeURIComponent(name) + "/" + filename;
+                    break;
+                }
+            }
+
+            let category = "Uncategorised";
+            const categoryPath = path.join(folder, "category.txt");
 
             if (
-                fs.existsSync(artworkPath) &&
-                fs.statSync(artworkPath).isFile()
+                fs.existsSync(categoryPath) &&
+                fs.statSync(categoryPath).isFile()
             ) {
-                artwork = "/games/" +
-                    encodeURIComponent(name) +
-                    "/" + filename;
-                break;
+                const text = fs.readFileSync(categoryPath, "utf8").trim();
+                if (text) category = text;
             }
-        }
 
-        const categoryPath = path.join(folder, "category.txt");
-        let category = "Uncategorised";
-
-        if (
-            fs.existsSync(categoryPath) &&
-            fs.statSync(categoryPath).isFile()
-        ) {
-            const categoryText = fs.readFileSync(
-                categoryPath,
-                "utf8"
-            ).trim();
-
-            if (categoryText) category = categoryText;
-        }
-
-        return {
-            name,
-            artwork,
-            folder: name,
-            category
-        };
-    });
+            return { name, artwork, folder: name, category };
+        });
 }
 
-/* GET EXTRA GAME DETAILS */
+/* GET GAME DETAILS */
 
 function getGameDetails(name) {
-    if (
-        !name ||
-        name === "." ||
-        name === ".." ||
-        name.includes("/") ||
-        name.includes("\\") ||
-        path.basename(name) !== name
-    ) {
-        return null;
-    }
-
-    const folder = path.join(GAMES_FOLDER, name);
-
-    if (
-        !fs.existsSync(folder) ||
-        !fs.statSync(folder).isDirectory()
-    ) {
-        return null;
-    }
+    const folder = getSafeGameFolder(name);
+    if (!folder) return null;
 
     const descriptionPath = path.join(
         folder,
@@ -261,17 +363,13 @@ function getGameDetails(name) {
         fs.existsSync(descriptionPath) &&
         fs.statSync(descriptionPath).isFile()
     ) {
-        description = fs.readFileSync(
-            descriptionPath,
-            "utf8"
-        );
+        description = fs.readFileSync(descriptionPath, "utf8");
     }
 
     const screenshots = [];
-    const extensions = [".jpg", ".jpeg", ".png", ".webp"];
 
     for (let i = 1; i <= 5; i++) {
-        for (const extension of extensions) {
+        for (const extension of IMAGE_EXTENSIONS) {
             const filename = "screenshot" + i + extension;
             const screenshotPath = path.join(folder, filename);
 
@@ -281,8 +379,7 @@ function getGameDetails(name) {
             ) {
                 screenshots.push(
                     "/games/" +
-                    encodeURIComponent(name) +
-                    "/" + filename
+                    encodeURIComponent(name) + "/" + filename
                 );
                 break;
             }
@@ -292,96 +389,78 @@ function getGameDetails(name) {
     return {
         name,
         description,
-        screenshots
+        screenshots,
+        updates: getAddonEntries(name, "Updates"),
+        dlc: getAddonEntries(name, "DLC")
     };
 }
 
-/* FIND WUP FILES FOR DOWNLOAD */
+/* FIND AN ADD-ON PACKAGE */
 
-function getGameDownloadFiles(name) {
-    if (
-        !name ||
-        name === "." ||
-        name === ".." ||
-        name.includes("/") ||
-        name.includes("\\") ||
-        path.basename(name) !== name
-    ) {
+function getAddonDownloadFiles(gameName, type, addonName) {
+    if (type !== "DLC" && type !== "Updates") return null;
+    if (!safeFolderName(addonName)) return null;
+
+    const gameFolder = getSafeGameFolder(gameName);
+    if (!gameFolder) return null;
+
+    const addonRoot = path.join(gameFolder, type);
+    const folder = path.resolve(addonRoot, addonName);
+
+    if (!folder.startsWith(path.resolve(addonRoot) + path.sep)) {
         return null;
     }
-
-    const folder = path.join(GAMES_FOLDER, name);
 
     if (
         !fs.existsSync(folder) ||
         !fs.statSync(folder).isDirectory()
-    ) {
-        return null;
-    }
+    ) return null;
 
-    const allowedExtensions = [
-        ".app",
-        ".h3",
-        ".tik",
-        ".tmd",
-        ".cert"
-    ];
-
-    const files = fs.readdirSync(folder, {
-        withFileTypes: true
-    })
-    .filter(item => item.isFile())
-    .filter(item =>
-        allowedExtensions.includes(
-            path.extname(item.name).toLowerCase()
-        )
-    )
-    .map(item => {
-        const filePath = path.join(folder, item.name);
-
-        return {
-            name: item.name,
-            size: fs.statSync(filePath).size
-        };
-    });
-
-    return {
-        name,
-        files,
-        totalFiles: files.length,
-        totalSize: files.reduce(
-            (total, file) => total + file.size,
-            0
-        )
-    };
+    return getPackageFiles(folder, addonName);
 }
 
 /* CREATE DOWNLOAD QUEUE ITEM */
 
-function addToDownloadQueue(name) {
-    const downloadInfo = getGameDownloadFiles(name);
+function addToDownloadQueue(gameName, type, addonName) {
+    const isAddon = !!addonName;
 
-    if (!downloadInfo || downloadInfo.totalFiles === 0) {
-        return null;
+    const packageInfo = isAddon
+        ? getAddonDownloadFiles(gameName, type, addonName)
+        : getGameDownloadFiles(gameName);
+
+    if (!packageInfo || packageInfo.totalFiles === 0) return null;
+
+    const queueKey = isAddon
+        ? gameName + "|" + type + "|" + addonName
+        : gameName + "|GAME";
+
+    const existing = downloadQueue.find(item => item.queueKey === queueKey);
+
+    if (existing) {
+        return { ...existing, alreadyQueued: true };
     }
 
-    const existingDownload = downloadQueue.find(
-        item => item.name === name
-    );
-
-    if (existingDownload) {
-        return {
-            ...existingDownload,
-            alreadyQueued: true
-        };
-    }
+    const remoteFolder = isAddon
+        ? (gameName + " - " + type + " - " + addonName)
+        : gameName;
 
     const item = {
         id: crypto.randomUUID(),
-        name: downloadInfo.name,
-        files: downloadInfo.files,
-        totalFiles: downloadInfo.totalFiles,
-        totalSize: downloadInfo.totalSize,
+        queueKey,
+        name: gameName,
+        displayName: isAddon
+            ? gameName + " - " + type + ": " + addonName
+            : gameName,
+        gameName,
+        type: isAddon ? type : "GAME",
+        addonName: isAddon ? addonName : null,
+        localFolder: isAddon
+            ? path.join(GAMES_FOLDER, gameName, type, addonName)
+            : path.join(GAMES_FOLDER, gameName),
+        remoteFolder,
+        files: packageInfo.files,
+        totalFiles: packageInfo.totalFiles,
+        totalSize: packageInfo.totalSize,
         uploadedFiles: 0,
         uploadedBytes: 0,
         progress: 0,
@@ -391,25 +470,18 @@ function addToDownloadQueue(name) {
     };
 
     downloadQueue.push(item);
-
     return item;
 }
 
-/* REMOVE DOWNLOAD QUEUE ITEM */
+/* REMOVE DOWNLOAD */
 
 function removeFromDownloadQueue(id) {
-    const index = downloadQueue.findIndex(
-        item => item.id === id
-    );
-
+    const index = downloadQueue.findIndex(item => item.id === id);
     if (index === -1) return false;
 
     const item = downloadQueue[index];
 
-    if (
-        item.status === "connecting" ||
-        item.status === "uploading"
-    ) {
+    if (item.status === "connecting" || item.status === "uploading") {
         return false;
     }
 
@@ -417,60 +489,52 @@ function removeFromDownloadQueue(id) {
     return true;
 }
 
-/* FIND QUEUE ITEM */
-
-function findDownload(id) {
-    return downloadQueue.find(item => item.id === id);
-}
-
-/* UPLOAD ONE GAME TO THE WII U */
+/* UPLOAD PACKAGE TO WII U
+   FIX: ensureDir() creates the directory and changes into it.
+   Do NOT call client.cd(item.remoteFolder) again afterwards.
+*/
 
 async function uploadGameToWiiU(item) {
     let client;
+    let stage = "Starting";
 
     try {
         item.status = "connecting";
         item.message = "Connecting to Wii U...";
         item.progress = 0;
+        item.uploadedFiles = 0;
+        item.uploadedBytes = 0;
 
-        console.log("Connecting to Wii U for:", item.name);
-
+        stage = "Connecting to Wii U FTP";
         client = await connectWiiUFTP();
 
-        item.message = "Opening SD card install folder...";
-
-        // Use the confirmed SD card directory.
+        stage = "Opening Wii U install directory";
         await client.cd(WIIU_INSTALL_PATH);
 
-        // Create and enter this game's own directory.
-        await client.ensureDir(item.name);
+        console.log("FTP install directory:", await client.pwd());
+
+        stage = "Creating package directory: " + item.remoteFolder;
+
+        // ensureDir() leaves the FTP client inside this directory.
+        await client.ensureDir(item.remoteFolder);
+
+        console.log("FTP package destination:", await client.pwd());
 
         item.status = "uploading";
-        item.message = "Uploading game files...";
-
-        console.log(
-            "Uploading",
-            item.name,
-            "to",
-            WIIU_INSTALL_PATH + "/" + item.name
-        );
+        item.message = "Uploading package files...";
 
         for (let i = 0; i < item.files.length; i++) {
             const file = item.files[i];
+            const localPath = path.join(item.localFolder, file.name);
 
-            const localPath = path.join(
-                GAMES_FOLDER,
-                item.name,
-                file.name
-            );
-
-            if (!fs.existsSync(localPath)) {
+            if (
+                !fs.existsSync(localPath) ||
+                !fs.statSync(localPath).isFile()
+            ) {
                 throw new Error("Missing PC file: " + file.name);
             }
 
-            if (!fs.statSync(localPath).isFile()) {
-                throw new Error("Not a file: " + file.name);
-            }
+            stage = "Uploading " + file.name;
 
             item.message =
                 "Uploading " + file.name +
@@ -484,9 +548,7 @@ async function uploadGameToWiiU(item) {
             item.uploadedBytes += file.size;
 
             item.progress = item.totalSize > 0
-                ? Math.round(
-                    item.uploadedBytes / item.totalSize * 100
-                )
+                ? Math.round(item.uploadedBytes / item.totalSize * 100)
                 : 100;
         }
 
@@ -494,25 +556,22 @@ async function uploadGameToWiiU(item) {
         item.progress = 100;
         item.message = "Transfer completed successfully!";
 
-        console.log("Finished uploading:", item.name);
+        console.log("Transfer completed:", item.displayName);
 
     } catch (error) {
         item.status = "failed";
         item.message = error.message;
 
-        console.log(
-            "Upload failed for",
-            item.name,
-            ":",
-            error.message
-        );
+        console.log("FTP transfer failed at:", stage);
+        console.log("Package:", item.displayName);
+        console.log("FTP error:", error);
 
     } finally {
         if (client) client.close();
     }
 }
 
-/* PROCESS DOWNLOAD QUEUE */
+/* PROCESS QUEUE */
 
 async function processDownloadQueue() {
     if (downloadWorkerRunning) return;
@@ -521,206 +580,87 @@ async function processDownloadQueue() {
 
     try {
         while (true) {
-            const nextItem = downloadQueue.find(
-                item => item.status === "queued"
-            );
+            const next = downloadQueue.find(item => item.status === "queued");
+            if (!next) break;
 
-            if (!nextItem) break;
-
-            await uploadGameToWiiU(nextItem);
+            await uploadGameToWiiU(next);
         }
     } finally {
         downloadWorkerRunning = false;
 
-        // Catch any item added as the worker was finishing.
         if (downloadQueue.some(item => item.status === "queued")) {
             processDownloadQueue();
         }
     }
 }
 
-/* WII U FILE BROWSER PAGE */
+/* SIMPLE FTP BROWSER PAGE */
 
 const ftpBrowserHTML = `<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Wii U File Browser</title>
 <style>
-* { box-sizing: border-box; }
-body {
-    margin: 0;
-    background: #e8edf2;
-    color: #333;
-    font-family: Arial, sans-serif;
-}
-header {
-    background: #009ac7;
-    color: white;
-    padding: 22px;
-    text-align: center;
-}
-header h1 { margin: 0; font-size: 25px; }
-main { max-width: 850px; margin: 30px auto; padding: 20px; }
-.panel {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 8px #00000015;
-}
-.toolbar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 18px;
-}
-button {
-    border: 0;
-    border-radius: 5px;
-    padding: 11px 16px;
-    background: #009ac7;
-    color: white;
-    cursor: pointer;
-}
-button:disabled { opacity: 0.4; cursor: default; }
-#currentPath { overflow-wrap: anywhere; color: #666; }
-.entry {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 13px 8px;
-    border-bottom: 1px solid #e5e5e5;
-}
-.entry:last-child { border-bottom: none; }
-.entryName { overflow-wrap: anywhere; }
-.folderButton {
-    background: transparent;
-    color: #167ba0;
-    padding: 5px;
-    text-align: left;
-    font-size: 15px;
-}
-.fileName { color: #555; }
-.fileSize { color: #888; font-size: 12px; white-space: nowrap; }
-#status { color: #666; margin: 12px 0; }
-.warning { margin-top: 18px; font-size: 13px; color: #777; }
+body{margin:0;background:#e8edf2;font-family:Arial;color:#333}
+header{background:#009ac7;color:white;padding:20px;text-align:center}
+main{max-width:850px;margin:25px auto;padding:15px}
+.panel{background:white;padding:20px;border-radius:8px}
+button{background:#009ac7;color:white;border:0;padding:10px 15px;cursor:pointer;margin:4px}
+.entry{padding:12px;border-bottom:1px solid #ddd}
+.folderButton{background:none;color:#167ba0}
 </style>
 </head>
 <body>
-<header><h1>Wii U File Browser</h1></header>
-<main>
-<div class="panel">
-    <div class="toolbar">
-        <button id="backButton">← Back</button>
-        <button id="refreshButton">Refresh</button>
-    </div>
-    <p id="currentPath">/fs</p>
-    <p id="status">Connecting...</p>
-    <div id="fileList"></div>
-    <p class="warning">
-        Read-only browser. It does not upload, delete or modify files.
-    </p>
-</div>
-</main>
+<header><h2>Wii U File Browser</h2></header>
+<main><div class="panel">
+<button id="back">← Back</button>
+<button id="refresh">Refresh</button>
+<p id="path">/fs</p>
+<p id="status">Loading...</p>
+<div id="files"></div>
+<p>Read-only browser. Files are not modified.</p>
+</div></main>
 <script>
-let currentPath = "/fs";
+var currentPath="/fs";
+var files=document.getElementById("files");
+var statusText=document.getElementById("status");
 
-const fileList = document.getElementById("fileList");
-const statusText = document.getElementById("status");
-const pathText = document.getElementById("currentPath");
-const backButton = document.getElementById("backButton");
-
-function formatSize(bytes) {
-    if (bytes === null || bytes === undefined) return "";
-    if (bytes < 1024) return bytes + " bytes";
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+function load(){
+ files.innerHTML="";
+ document.getElementById("path").textContent=currentPath;
+ statusText.textContent="Loading...";
+ document.getElementById("back").disabled=currentPath==="/fs";
+ fetch("/api/ftp/browse?path="+encodeURIComponent(currentPath))
+ .then(function(r){return r.json();})
+ .then(function(data){
+  if(!data.success){statusText.textContent=data.error;return;}
+  statusText.textContent=data.contents.length+" items";
+  data.contents.forEach(function(item){
+   var row=document.createElement("div");
+   row.className="entry";
+   if(item.type==="folder"){
+    var b=document.createElement("button");
+    b.className="folderButton";
+    b.textContent="📁 "+item.name;
+    b.onclick=function(){currentPath+="/"+item.name;load();};
+    row.appendChild(b);
+   }else{
+    row.textContent="📄 "+item.name;
+   }
+   files.appendChild(row);
+  });
+ })
+ .catch(function(e){statusText.textContent=e.message;});
 }
-
-function openFolder(name) {
-    currentPath = currentPath === "/fs"
-        ? "/fs/" + name
-        : currentPath + "/" + name;
-    loadDirectory();
-}
-
-async function loadDirectory() {
-    fileList.replaceChildren();
-    pathText.textContent = currentPath;
-    statusText.textContent = "Loading directory...";
-    backButton.disabled = currentPath === "/fs";
-
-    try {
-        const response = await fetch(
-            "/api/ftp/browse?path=" + encodeURIComponent(currentPath)
-        );
-        const data = await response.json();
-
-        if (!data.success) {
-            statusText.textContent =
-                "Could not read directory: " + data.error;
-            return;
-        }
-
-        statusText.textContent =
-            data.contents.length + " items found";
-
-        if (data.contents.length === 0) {
-            statusText.textContent = "This folder is empty.";
-            return;
-        }
-
-        data.contents.forEach(item => {
-            const row = document.createElement("div");
-            row.className = "entry";
-
-            const name = document.createElement("div");
-            name.className = "entryName";
-
-            if (item.type === "folder") {
-                const button = document.createElement("button");
-                button.className = "folderButton";
-                button.textContent = "📁 " + item.name;
-                button.addEventListener("click", () => openFolder(item.name));
-                name.appendChild(button);
-            } else {
-                const label = document.createElement("span");
-                label.className = "fileName";
-                label.textContent = "📄 " + item.name;
-                name.appendChild(label);
-            }
-
-            const size = document.createElement("span");
-            size.className = "fileSize";
-            size.textContent = item.type === "file"
-                ? formatSize(item.size)
-                : "Folder";
-
-            row.appendChild(name);
-            row.appendChild(size);
-            fileList.appendChild(row);
-        });
-
-    } catch (error) {
-        statusText.textContent = "Connection error: " + error.message;
-    }
-}
-
-backButton.addEventListener("click", () => {
-    if (currentPath === "/fs") return;
-    const parts = currentPath.split("/");
-    parts.pop();
-    currentPath = parts.join("/") || "/fs";
-    loadDirectory();
-});
-
-document.getElementById("refreshButton")
-    .addEventListener("click", loadDirectory);
-
-loadDirectory();
+document.getElementById("back").onclick=function(){
+ if(currentPath==="/fs")return;
+ currentPath=currentPath.substring(0,currentPath.lastIndexOf("/"))||"/fs";
+ load();
+};
+document.getElementById("refresh").onclick=load;
+load();
 </script>
 </body>
 </html>`;
@@ -746,19 +686,14 @@ const server = http.createServer((req, res) => {
         return res.end("Bad request");
     }
 
-    /* JSON RESPONSE HELPER */
-
     function sendJSON(data, statusCode = 200) {
         res.writeHead(statusCode, {
             "Content-Type": "application/json; charset=utf-8",
             "Access-Control-Allow-Origin": "*",
             "Cache-Control": "no-store"
         });
-
         res.end(JSON.stringify(data));
     }
-
-    /* READ JSON REQUEST BODY */
 
     function readJSONBody(callback) {
         let body = "";
@@ -766,7 +701,6 @@ const server = http.createServer((req, res) => {
 
         req.on("data", chunk => {
             body += chunk;
-
             if (body.length > 10000) tooLarge = true;
         });
 
@@ -783,8 +717,6 @@ const server = http.createServer((req, res) => {
         });
     }
 
-    /* WII U FILE BROWSER PAGE */
-
     if (requestedPath === "/ftp" && req.method === "GET") {
         res.writeHead(200, {
             "Content-Type": "text/html; charset=utf-8",
@@ -793,74 +725,50 @@ const server = http.createServer((req, res) => {
         return res.end(ftpBrowserHTML);
     }
 
-    /* WII U FTP TEST API */
-
-    if (
-        requestedPath === "/api/ftp/test" &&
-        req.method === "POST"
-    ) {
-        return testWiiUConnection().then(result => {
-            sendJSON(result, result.success ? 200 : 503);
-        }).catch(error => {
-            sendJSON({ success: false, error: error.message }, 503);
-        });
+    if (requestedPath === "/api/ftp/test" && req.method === "POST") {
+        return testWiiUConnection().then(result =>
+            sendJSON(result, result.success ? 200 : 503)
+        );
     }
 
-    /* WII U FTP BROWSE API */
-
-    if (
-        requestedPath === "/api/ftp/browse" &&
-        req.method === "GET"
-    ) {
-        const remotePath = url.searchParams.get("path") || "/fs";
-
-        return browseWiiUDirectory(remotePath).then(result => {
-            sendJSON(result, result.success ? 200 : 400);
-        }).catch(error => {
-            sendJSON({ success: false, error: error.message }, 503);
-        });
+    if (requestedPath === "/api/ftp/browse" && req.method === "GET") {
+        return browseWiiUDirectory(
+            url.searchParams.get("path") || "/fs"
+        ).then(result => sendJSON(result, result.success ? 200 : 400));
     }
-
-    /* GAME LIBRARY API */
 
     if (requestedPath === "/api/games" && req.method === "GET") {
         return sendJSON(getGames());
     }
 
-    /* GAME DETAILS API */
-
-    if (
-        requestedPath === "/api/game-details" &&
-        req.method === "GET"
-    ) {
-        const name = url.searchParams.get("name");
-        const details = getGameDetails(name);
+    if (requestedPath === "/api/game-details" && req.method === "GET") {
+        const details = getGameDetails(url.searchParams.get("name"));
 
         if (!details) {
             return sendJSON({
                 error: "Game not found",
                 description: "",
-                screenshots: []
+                screenshots: [],
+                updates: [],
+                dlc: []
             }, 404);
         }
 
         return sendJSON(details);
     }
 
-    /* GAME DOWNLOAD INFO API */
-
-    if (
-        requestedPath === "/api/download-info" &&
-        req.method === "GET"
-    ) {
+    if (requestedPath === "/api/download-info" && req.method === "GET") {
         const name = url.searchParams.get("name");
-        const downloadInfo = getGameDownloadFiles(name);
+        const type = url.searchParams.get("type");
+        const addon = url.searchParams.get("addon");
 
-        if (!downloadInfo) {
-            return sendJSON({ error: "Game not found" }, 404);
-        }
+        const info = addon
+            ? getAddonDownloadFiles(name, type, addon)
+            : getGameDownloadFiles(name);
 
-        if (downloadInfo.totalFiles === 0) {
+        if (!info) return sendJSON({ error: "Package not found" }, 404);
+
+        if (!info.totalFiles) {
             return sendJSON({
                 error: "No WUP files found",
                 name,
@@ -868,77 +776,62 @@ const server = http.createServer((req, res) => {
             }, 404);
         }
 
-        return sendJSON(downloadInfo);
+        return sendJSON(info);
     }
 
-    /* ADD GAME TO DOWNLOAD QUEUE AND START TRANSFER */
-
-    if (
-        requestedPath === "/api/downloads" &&
-        req.method === "POST"
-    ) {
+    if (requestedPath === "/api/downloads" && req.method === "POST") {
         return readJSONBody(data => {
-            if (
-                !data ||
-                typeof data.name !== "string" ||
-                !data.name.trim()
-            ) {
+            if (!data || typeof data.name !== "string" || !data.name.trim()) {
                 return sendJSON({ error: "Invalid game name" }, 400);
             }
 
-            const item = addToDownloadQueue(data.name.trim());
+            const name = data.name.trim();
+            const type = data.type;
+            const addon = data.addon;
+
+            if (addon && (type !== "DLC" && type !== "Updates")) {
+                return sendJSON({ error: "Invalid add-on type" }, 400);
+            }
+
+            const item = addToDownloadQueue(name, type, addon);
 
             if (!item) {
                 return sendJSON({
-                    error: "Game not found or no WUP files available"
+                    error: "Package not found or no WUP files available"
                 }, 404);
             }
 
-            // Start processing the queue automatically.
-            if (!item.alreadyQueued) {
-                processDownloadQueue();
-            }
+            if (!item.alreadyQueued) processDownloadQueue();
 
             return sendJSON({
                 success: true,
                 message: item.alreadyQueued
-                    ? "Game is already in the download queue"
-                    : "Game added. Wii U transfer starting.",
+                    ? "Package is already in the download queue"
+                    : "Package added. Wii U transfer starting.",
                 download: item,
                 alreadyQueued: !!item.alreadyQueued
             }, item.alreadyQueued ? 200 : 201);
         });
     }
 
-    /* GET DOWNLOAD QUEUE */
-
-    if (
-        requestedPath === "/api/downloads" &&
-        req.method === "GET"
-    ) {
+    if (requestedPath === "/api/downloads" && req.method === "GET") {
         return sendJSON({
             downloads: downloadQueue,
             totalDownloads: downloadQueue.length
         });
     }
 
-    /* REMOVE DOWNLOAD FROM QUEUE */
-
     if (
         requestedPath.startsWith("/api/downloads/") &&
         req.method === "DELETE"
     ) {
-        const id = requestedPath.substring(
-            "/api/downloads/".length
-        );
+        const id = requestedPath.substring("/api/downloads/".length);
 
         if (!id || id.includes("/")) {
             return sendJSON({ error: "Invalid download ID" }, 400);
         }
 
-        const removed = removeFromDownloadQueue(id);
-
-        if (!removed) {
+        if (!removeFromDownloadQueue(id)) {
             return sendJSON({
                 error: "Download not found, or transfer is currently active"
             }, 409);
@@ -950,18 +843,9 @@ const server = http.createServer((req, res) => {
         });
     }
 
-    /* HOME PAGE */
+    if (requestedPath === "/") requestedPath = "/index.html";
 
-    if (requestedPath === "/") {
-        requestedPath = "/index.html";
-    }
-
-    /* SERVE WEBSITE FILES */
-
-    const filePath = path.resolve(
-        ROOT,
-        "." + requestedPath
-    );
+    const filePath = path.resolve(ROOT, "." + requestedPath);
 
     if (!filePath.startsWith(ROOT + path.sep)) {
         res.writeHead(403);
@@ -970,17 +854,14 @@ const server = http.createServer((req, res) => {
 
     fs.readFile(filePath, (err, data) => {
         if (err) {
-            res.writeHead(404, {
-                "Content-Type": "text/plain"
-            });
+            res.writeHead(404, { "Content-Type": "text/plain" });
             return res.end("404 - File not found");
         }
 
         const ext = path.extname(filePath).toLowerCase();
 
         res.writeHead(200, {
-            "Content-Type":
-                mimeTypes[ext] || "application/octet-stream"
+            "Content-Type": mimeTypes[ext] || "application/octet-stream"
         });
 
         res.end(data);
@@ -994,31 +875,17 @@ server.listen(PORT, HOST, () => {
     console.log("==================================");
     console.log(" Nintendo eShop server running!");
     console.log("==================================");
-
     console.log("PC: http://localhost:" + PORT);
     console.log("Wii U: http://YOUR-PC-IP:" + PORT);
-
     console.log("");
-    console.log("GAME APIs");
     console.log("Game Library: /api/games");
     console.log("Game Details: /api/game-details");
     console.log("Download Info: /api/download-info");
-
-    console.log("");
-    console.log("DOWNLOAD APIs");
-    console.log("GET    /api/downloads");
-    console.log("POST   /api/downloads");
-    console.log("DELETE /api/downloads/{id}");
-
-    console.log("");
-    console.log("WII U FTP");
-    console.log("POST   /api/ftp/test");
-    console.log("GET    /api/ftp/browse?path=/fs");
-    console.log("Browser: http://localhost:" + PORT + "/ftp");
-    console.log("FTP address: " + WIIU_IP + ":" + WIIU_FTP_PORT);
+    console.log("Downloads: /api/downloads");
+    console.log("FTP Browser: http://localhost:" + PORT + "/ftp");
+    console.log("Wii U FTP: " + WIIU_IP + ":" + WIIU_FTP_PORT);
     console.log("Install folder: " + WIIU_INSTALL_PATH);
-
     console.log("");
-    console.log("Automatic FTP download queue is ready.");
+    console.log("DLC and Updates support is enabled.");
     console.log("==================================");
 });
