@@ -31,4 +31,6 @@ To learn how to add games thats in the games/Demo game
 and after you download the game it saves in your install folder for wup installer gx2 and open wup installer gx2 to install the game and then play
 
 
-Also this project uses Ai for code Thanks chatgpt
+Also this project uses Ai for code Thanks chatgpt 
+
+Code was tested for bugs and that by me Joshygamer1 I am meh when it comes to Ai I know C# and I am learning it also know fnf modding but I just made this for fun and expect updates
